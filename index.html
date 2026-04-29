@@ -584,8 +584,8 @@ function showApp() {
 /* ════ 지도 ════ */
 function initMap() {
   map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '© OpenStreetMap'
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap © CARTO'
   }).addTo(map);
   L.control.zoom({ position: 'bottomleft' }).addTo(map);
   map.on('click', () => closeSheet());
