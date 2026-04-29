@@ -540,6 +540,8 @@
 <script src="firebase-config.js"></script>
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Kakao Maps SDK (autoload=false → 콜백으로 안정적 초기화) -->
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e5ed844650432c56d73361aec1d06927&libraries=services&autoload=false"></script>
 <script>
 /* ════ 초기화 ════ */
 firebase.initializeApp(firebaseConfig);
@@ -722,7 +724,14 @@ function closeSheet() {
   currentDocId = null;
 }
 
-/* ════ 검색 (Nominatim) ════ */
+/* ════ Kakao Places 초기화 ════ */
+let _kakaoPS = null;
+kakao.maps.load(() => {
+  _kakaoPS = new kakao.maps.services.Places();
+  console.log('[Kakao] Places service ready');
+});
+
+/* ════ 검색 ════ */
 let searchTimer = null;
 
 function openSearch() {
@@ -745,46 +754,72 @@ function onSearchInput(val) {
   searchTimer = setTimeout(() => doSearch(val.trim()), 500);
 }
 
-async function doSearch(query) {
+function doSearch(query) {
   const resultsEl = document.getElementById('search-results');
   resultsEl.innerHTML = '<div class="search-empty">검색 중...</div>';
-  try {
-    const resp = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 서울')}&format=json&accept-language=ko&countrycodes=kr&limit=15`,
-      { headers: { 'Accept-Language': 'ko' } }
-    );
-    const places = await resp.json();
-    if (!places.length) {
-      resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다<br><small style="font-size:0.75rem;margin-top:6px;display:block">더 구체적인 이름으로 검색해보세요</small></div>';
-      return;
-    }
-    window._searchResults = places;
-    resultsEl.innerHTML = places.map((r, i) => {
-      const name = r.name || r.display_name.split(',')[0].trim();
-      const parts = r.display_name.split(',').slice(0, 4).join(', ');
-      return `<div class="search-item" onclick="selectFromSearch(${i})">
-        <div class="search-item-name">${name}</div>
-        <div class="search-item-addr">${parts}</div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    resultsEl.innerHTML = `<div class="search-empty">검색 실패: ${e.message}</div>`;
+
+  if (_kakaoPS) {
+    // ── Kakao Places 검색 ──
+    _kakaoPS.keywordSearch(query, (results, status) => {
+      if (status === kakao.maps.services.Status.OK && results.length > 0) {
+        window._searchResults = { type: 'kakao', data: results };
+        resultsEl.innerHTML = results.map((r, i) => `
+          <div class="search-item" onclick="selectFromSearch(${i})">
+            <div class="search-item-name">${r.place_name}</div>
+            <div class="search-item-addr">${r.road_address_name || r.address_name}</div>
+            <div class="search-item-cat">${r.category_name}</div>
+          </div>`).join('');
+      } else {
+        resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
+      }
+    }, {
+      location: new kakao.maps.LatLng(37.5665, 126.9780),
+      radius: 30000,
+      sort: kakao.maps.services.SortBy.DISTANCE,
+    });
+  } else {
+    // ── Nominatim 폴백 ──
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 서울')}&format=json&accept-language=ko&countrycodes=kr&limit=15`,
+      { headers: { 'Accept-Language': 'ko' } })
+      .then(r => r.json())
+      .then(places => {
+        if (!places.length) { resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>'; return; }
+        window._searchResults = { type: 'nominatim', data: places };
+        resultsEl.innerHTML = places.map((r, i) => {
+          const name = r.name || r.display_name.split(',')[0].trim();
+          return `<div class="search-item" onclick="selectFromSearch(${i})">
+            <div class="search-item-name">${name}</div>
+            <div class="search-item-addr">${r.display_name.split(',').slice(0, 4).join(', ')}</div>
+          </div>`;
+        }).join('');
+      })
+      .catch(e => { resultsEl.innerHTML = `<div class="search-empty">검색 실패: ${e.message}</div>`; });
   }
 }
 
 function selectFromSearch(idx) {
-  const r = window._searchResults[idx];
-  const name = r.name || r.display_name.split(',')[0].trim();
-  const addrParts = r.display_name.split(',').slice(0, 5).join(', ');
-  selectedPlace = {
-    name,
-    address: addrParts,
-    lat:  parseFloat(r.lat),
-    lng:  parseFloat(r.lon),
-    kakaoId: '',
-    phone: '',
-    category: '',
-  };
+  const { type, data } = window._searchResults;
+  const r = data[idx];
+  if (type === 'kakao') {
+    selectedPlace = {
+      name: r.place_name,
+      address: r.road_address_name || r.address_name,
+      lat: parseFloat(r.y),
+      lng: parseFloat(r.x),
+      kakaoId: r.id,
+      phone: r.phone || '',
+      category: r.category_name || '',
+    };
+  } else {
+    const name = r.name || r.display_name.split(',')[0].trim();
+    selectedPlace = {
+      name,
+      address: r.display_name.split(',').slice(0, 5).join(', '),
+      lat: parseFloat(r.lat),
+      lng: parseFloat(r.lon),
+      kakaoId: '', phone: '', category: '',
+    };
+  }
   closeSearch();
   openFormForAdd();
 }
