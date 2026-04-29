@@ -733,11 +733,13 @@ function tryInitKakao(retries) {
     if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services &&
         typeof kakao.maps.services.Places === 'function') {
       _kakaoPS = new kakao.maps.services.Places();
-      console.log('[Kakao] Places ready');
+      console.log('[Kakao] Places ready ✅');
       return;
     }
-  } catch(e) { console.warn('[Kakao]', e); }
+    console.log(`[Kakao] 초기화 대기 중... (남은 시도: ${retries})`);
+  } catch(e) { console.warn('[Kakao] 오류:', e); }
   if (retries > 0) setTimeout(() => tryInitKakao(retries - 1), 1000);
+  else console.warn('[Kakao] 초기화 실패 - Nominatim 폴백 사용');
 }
 window.addEventListener('load', () => tryInitKakao(10));
 
