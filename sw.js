@@ -1,5 +1,5 @@
-// v:2026-04-29T07:53:30
-const CACHE = 'kolkijido-v:2026-04-29T07:53:30';
+// v:2026-04-29T08:00:55
+const CACHE = 'kolkijido-v:2026-04-29T08:00:55';
 const ASSETS = ['/kolkijido/', '/kolkijido/index.html', '/kolkijido/manifest.json', '/kolkijido/firebase-config.js'];
 
 self.addEventListener('install', e => {
