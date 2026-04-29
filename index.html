@@ -540,8 +540,8 @@
 <script src="firebase-config.js"></script>
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Kakao Maps SDK (autoload=false → 콜백으로 안정적 초기화) -->
-<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e5ed844650432c56d73361aec1d06927&libraries=services&autoload=false"></script>
+<!-- Kakao Maps SDK -->
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e5ed844650432c56d73361aec1d06927&libraries=services"></script>
 <script>
 /* ════ 초기화 ════ */
 firebase.initializeApp(firebaseConfig);
@@ -724,16 +724,22 @@ function closeSheet() {
   currentDocId = null;
 }
 
-/* ════ Kakao Places 초기화 (실패해도 앱 전체가 죽지 않도록 try-catch) ════ */
+/* ════ Kakao Places 초기화 (1초마다 최대 10번 재시도) ════ */
 let _kakaoPS = null;
-try {
-  kakao.maps.load(() => {
-    try {
+
+function tryInitKakao(retries) {
+  if (_kakaoPS) return;
+  try {
+    if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services &&
+        typeof kakao.maps.services.Places === 'function') {
       _kakaoPS = new kakao.maps.services.Places();
-      console.log('[Kakao] Places service ready');
-    } catch(e) { console.warn('[Kakao] Places init failed:', e); }
-  });
-} catch(e) { console.warn('[Kakao] SDK not available:', e); }
+      console.log('[Kakao] Places ready');
+      return;
+    }
+  } catch(e) { console.warn('[Kakao]', e); }
+  if (retries > 0) setTimeout(() => tryInitKakao(retries - 1), 1000);
+}
+window.addEventListener('load', () => tryInitKakao(10));
 
 /* ════ 검색 ════ */
 let searchTimer = null;
