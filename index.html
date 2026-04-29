@@ -915,34 +915,48 @@ async function submitForm() {
     memo:          document.getElementById('form-memo').value.trim(),
   };
 
+  // edit 모드 시 currentDocId 최종 확인
+  if (formMode === 'edit' && !currentDocId) {
+    showToast('수정할 문서 정보가 없습니다. 다시 시도해주세요.');
+    return;
+  }
+
+  const timeout = ms => new Promise((_, rej) => setTimeout(() => rej(new Error('서버 응답 시간 초과 (10초)')), ms));
+
   showLoading();
   try {
     if (formMode === 'add') {
-      // 이미 같은 kakaoId 등록됐는지 체크
       if (selectedPlace.kakaoId) {
         const exist = allDocs.find(d => d.kakaoId === selectedPlace.kakaoId);
-        if (exist) { hideLoading(); showToast('이미 등록된 식당이에요. 수정 기능을 이용해주세요.'); closeForm(); openSheet(exist.id); return; }
+        if (exist) { showToast('이미 등록된 식당이에요. 수정 기능을 이용해주세요.'); closeForm(); openSheet(exist.id); return; }
       }
-      await db.collection('corkage').add({
-        ...data,
-        addedBy: { uid: currentUser.uid, name: currentUser.displayName || '익명' },
-        addedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
+      await Promise.race([
+        db.collection('corkage').add({
+          ...data,
+          addedBy: { uid: currentUser.uid, name: currentUser.displayName || '익명' },
+          addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }),
+        timeout(10000)
+      ]);
       showToast('✅ 등록 완료!');
     } else {
-      await db.collection('corkage').doc(currentDocId).update({
-        ...data,
-        updatedBy: { uid: currentUser.uid, name: currentUser.displayName || '익명' },
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      });
+      await Promise.race([
+        db.collection('corkage').doc(currentDocId).update({
+          ...data,
+          updatedBy: { uid: currentUser.uid, name: currentUser.displayName || '익명' },
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        }),
+        timeout(10000)
+      ]);
       showToast('✅ 수정 완료!');
     }
     closeForm();
     selectedPlace = null;
   } catch(e) {
     showToast('저장 실패: ' + e.message);
+  } finally {
+    hideLoading();
   }
-  hideLoading();
 }
 
 async function reportPlace() {
