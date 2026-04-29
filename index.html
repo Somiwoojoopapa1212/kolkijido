@@ -496,8 +496,6 @@
 <script src="firebase-config.js"></script>
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Kakao Maps SDK (Places 검색용) -->
-<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e5ed844650432c56d73361aec1d06927&libraries=services"></script>
 <script>
 /* ════ 초기화 ════ */
 firebase.initializeApp(firebaseConfig);
@@ -673,19 +671,8 @@ function closeSheet() {
   currentDocId = null;
 }
 
-/* ════ 검색 ════ */
+/* ════ 검색 (Nominatim) ════ */
 let searchTimer = null;
-let _ps = null;
-
-function getPS() {
-  if (_ps) return _ps;
-  try {
-    if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
-      _ps = new kakao.maps.services.Places();
-    }
-  } catch(e) {}
-  return _ps;
-}
 
 function openSearch() {
   document.getElementById('search-overlay').classList.add('open');
@@ -704,46 +691,48 @@ function onSearchInput(val) {
     document.getElementById('search-results').innerHTML = '<div class="search-empty">식당 이름을 입력해주세요</div>';
     return;
   }
-  searchTimer = setTimeout(() => doSearch(val.trim()), 400);
+  searchTimer = setTimeout(() => doSearch(val.trim()), 500);
 }
 
-function doSearch(query) {
-  const ps = getPS();
-  if (!ps) {
-    document.getElementById('search-results').innerHTML = '<div class="search-empty">검색 서비스 로딩 중입니다...</div>';
-    return;
-  }
-  document.getElementById('search-results').innerHTML = '<div class="search-empty">검색 중...</div>';
-  ps.keywordSearch(query, (results, status) => {
-    if (status === kakao.maps.services.Status.OK && results.length > 0) {
-      document.getElementById('search-results').innerHTML = results.map((r, i) => `
-        <div class="search-item" onclick="selectFromSearch(${i})">
-          <div class="search-item-name">${r.place_name}</div>
-          <div class="search-item-addr">${r.road_address_name || r.address_name}</div>
-          <div class="search-item-cat">${r.category_name}</div>
-        </div>
-      `).join('');
-      window._searchResults = results;
-    } else {
-      document.getElementById('search-results').innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
+async function doSearch(query) {
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.innerHTML = '<div class="search-empty">검색 중...</div>';
+  try {
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 서울')}&format=json&accept-language=ko&countrycodes=kr&limit=15`,
+      { headers: { 'Accept-Language': 'ko' } }
+    );
+    const places = await resp.json();
+    if (!places.length) {
+      resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다<br><small style="font-size:0.75rem;margin-top:6px;display:block">더 구체적인 이름으로 검색해보세요</small></div>';
+      return;
     }
-  }, {
-    location: new kakao.maps.LatLng(37.5665, 126.9780),
-    radius: 25000,
-    sort: kakao.maps.services.SortBy.DISTANCE,
-  });
+    window._searchResults = places;
+    resultsEl.innerHTML = places.map((r, i) => {
+      const name = r.name || r.display_name.split(',')[0].trim();
+      const parts = r.display_name.split(',').slice(0, 4).join(', ');
+      return `<div class="search-item" onclick="selectFromSearch(${i})">
+        <div class="search-item-name">${name}</div>
+        <div class="search-item-addr">${parts}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    resultsEl.innerHTML = `<div class="search-empty">검색 실패: ${e.message}</div>`;
+  }
 }
 
 function selectFromSearch(idx) {
   const r = window._searchResults[idx];
+  const name = r.name || r.display_name.split(',')[0].trim();
+  const addrParts = r.display_name.split(',').slice(0, 5).join(', ');
   selectedPlace = {
-    name:    r.place_name,
-    address: r.road_address_name || r.address_name,
-    lat:     parseFloat(r.y),
-    lng:     parseFloat(r.x),
-    kakaoId: r.id,
-    phone:   r.phone || '',
-    category: r.category_name || '',
+    name,
+    address: addrParts,
+    lat:  parseFloat(r.lat),
+    lng:  parseFloat(r.lon),
+    kakaoId: '',
+    phone: '',
+    category: '',
   };
   closeSearch();
   openFormForAdd();
