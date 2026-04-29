@@ -816,7 +816,8 @@ function openFormForAdd() {
 
 async function openFormForEdit() {
   if (!currentDocId) return;
-  const doc = allDocs.find(d => d.id === currentDocId);
+  const savedId = currentDocId; // closeSheet()가 null로 초기화하기 전에 저장
+  const doc = allDocs.find(d => d.id === savedId);
   if (!doc) return;
   formMode = 'edit';
   resetForm();
@@ -834,6 +835,7 @@ async function openFormForEdit() {
   if (doc.memo) document.getElementById('form-memo').value = doc.memo;
 
   closeSheet();
+  currentDocId = savedId; // closeSheet()로 null이 된 ID를 복원
   document.getElementById('form-overlay').classList.add('open');
 }
 
