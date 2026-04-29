@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🍷 콜키지도</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="theme-color" content="#6C3483">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="콜키지도">
+  <style>
+    :root {
+      --purple:   #6C3483;
+      --purple2:  #9B59B6;
+      --purple3:  #D2B4DE;
+      --bg:       #FAF7FF;
+      --white:    #FFFFFF;
+      --shadow:   rgba(108,52,131,0.14);
+      --free:     #27AE60;
+      --paid:     #E67E22;
+      --no:       #E74C3C;
+      --unknown:  #7F8C8D;
+      --text:     #2C3E50;
+      --text2:    #7F8C8D;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+
+    /* ══ 로그인 화면 ══ */
+    #login-screen {
+      position: fixed; inset: 0; background: linear-gradient(160deg, #4A235A 0%, #1A0828 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+    }
+    .login-logo { font-size: 5rem; margin-bottom: 12px; }
+    .login-title { font-family: 'Jua', sans-serif; font-size: 2.4rem; color: white; margin-bottom: 8px; }
+    .login-sub { font-size: 0.95rem; color: rgba(255,255,255,0.65); margin-bottom: 48px; }
+    .btn-google {
+      display: flex; align-items: center; gap: 12px; background: white;
+      border: none; border-radius: 14px; padding: 14px 28px;
+      font-family: 'Noto Sans KR', sans-serif; font-size: 1rem; font-weight: 500;
+      color: #2C3E50; cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: transform 0.15s;
+    }
+    .btn-google:active { transform: scale(0.97); }
+    .btn-google img { width: 22px; height: 22px; }
+
+    /* ══ 헤더 ══ */
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: var(--purple); padding: 0 16px;
+      display: flex; align-items: center; height: 56px; gap: 10px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .header-title { font-family: 'Jua', sans-serif; color: white; font-size: 1.2rem; flex: 1; }
+    .search-bar {
+      flex: 3; display: flex; align-items: center;
+      background: rgba(255,255,255,0.15); border-radius: 10px;
+      padding: 8px 12px; gap: 8px; cursor: pointer;
+    }
+    .search-bar span { color: rgba(255,255,255,0.75); font-size: 0.9rem; }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5);
+      cursor: pointer; object-fit: cover; background: var(--purple2);
+      display: flex; align-items: center; justify-content: center; color: white; font-size: 0.85rem;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* ══ 필터 바 ══ */
+    #filter-bar {
+      position: fixed; top: 56px; left: 0; right: 0; z-index: 999;
+      background: var(--white); padding: 10px 16px;
+      display: flex; gap: 8px; overflow-x: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      scrollbar-width: none;
+    }
+    #filter-bar::-webkit-scrollbar { display: none; }
+    .filter-chip {
+      display: flex; align-items: center; gap: 5px; white-space: nowrap;
+      border: 2px solid #E8E0F0; border-radius: 20px; padding: 6px 14px;
+      font-size: 0.82rem; cursor: pointer; background: white; color: var(--text2);
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .filter-chip.active { border-color: var(--purple); background: var(--purple); color: white; }
+    .filter-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* ══ 지도 ══ */
+    #map { position: fixed; top: 104px; left: 0; right: 0; bottom: 0; z-index: 1; }
+
+    /* ══ FAB ══ */
+    #fab {
+      position: fixed; bottom: 28px; right: 20px; z-index: 500;
+      width: 58px; height: 58px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--purple), var(--purple2));
+      border: none; color: white; font-size: 1.8rem; cursor: pointer;
+      box-shadow: 0 4px 20px var(--shadow); display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s;
+    }
+    #fab:active { transform: scale(0.92); }
+
+    /* ══ 바텀 시트 (식당 상세) ══ */
+    #bottom-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 800;
+      background: white; border-radius: 24px 24px 0 0;
+      box-shadow: 0 -4px 30px rgba(0,0,0,0.15);
+      transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      max-height: 85vh; overflow-y: auto;
+    }
+    #bottom-sheet.open { transform: translateY(0); }
+    .sheet-handle { width: 40px; height: 4px; background: #E0D0F0; border-radius: 2px; margin: 12px auto 0; }
+    .sheet-content { padding: 16px 20px 32px; }
+    .sheet-name { font-family: 'Jua', sans-serif; font-size: 1.35rem; color: var(--text); margin-bottom: 4px; }
+    .sheet-addr { font-size: 0.82rem; color: var(--text2); margin-bottom: 16px; display: flex; align-items: center; gap: 4px; }
+    .sheet-divider { height: 1px; background: #F0E8FF; margin: 14px 0; }
+
+    .info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .info-icon { font-size: 1.1rem; width: 24px; text-align: center; flex-shrink: 0; }
+    .info-label { font-size: 0.8rem; color: var(--text2); width: 64px; flex-shrink: 0; }
+    .info-value { font-size: 0.92rem; color: var(--text); font-weight: 500; flex: 1; }
+
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;
+    }
+    .status-badge.free    { background: #EAFAF1; color: var(--free); }
+    .status-badge.paid    { background: #FEF5EC; color: var(--paid); }
+    .status-badge.no      { background: #FDEDEC; color: var(--no); }
+    .status-badge.unknown { background: #F2F3F4; color: var(--unknown); }
+
+    .alcohol-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .alcohol-tag { background: #F0E8FF; color: var(--purple); border-radius: 12px; padding: 3px 10px; font-size: 0.78rem; }
+
+    .sheet-meta { font-size: 0.75rem; color: var(--text2); margin-top: 12px; }
+
+    .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+    .btn-edit {
+      background: var(--purple); color: white; border: none; border-radius: 12px;
+      padding: 13px; font-family: 'Jua', sans-serif; font-size: 0.95rem; cursor: pointer;
+    }
+    .btn-report {
+      background: #FDF0F0; color: var(--no); border: 1.5px solid #FADADD;
+      border-radius: 12px; padding: 13px; font-family: 'Jua', sans-serif;
+      font-size: 0.95rem; cursor: pointer;
+    }
+    .btn-close-sheet {
+      position: absolute; top: 12px; right: 16px;
+      background: #F0E8FF; border: none; border-radius: 50%; width: 30px; height: 30px;
+      cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
+      color: var(--purple);
+    }
+
+    /* ══ 검색 오버레이 ══ */
+    #search-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: white; display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #search-overlay.open { transform: translateY(0); }
+    .search-overlay-header {
+      display: flex; align-items: center; gap: 10px; padding: 14px 16px;
+      border-bottom: 1px solid #F0E8FF; background: white;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .search-input-wrap { flex: 1; position: relative; }
+    .search-input {
+      width: 100%; border: 2px solid #E8D5F5; border-radius: 12px;
+      padding: 11px 16px 11px 40px; font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.95rem; outline: none; transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--purple); }
+    .search-icon-abs { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text2); font-size: 1rem; }
+    .btn-cancel { background: none; border: none; color: var(--purple); font-size: 0.9rem; cursor: pointer; white-space: nowrap; padding: 8px 4px; }
+    .search-results { flex: 1; overflow-y: auto; }
+    .search-item {
+      padding: 14px 20px; border-bottom: 1px solid #F8F0FF;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .search-item:active { background: #FAF0FF; }
+    .search-item-name { font-size: 0.95rem; font-weight: 500; color: var(--text); }
+    .search-item-addr { font-size: 0.78rem; color: var(--text2); margin-top: 3px; }
+    .search-item-cat  { font-size: 0.72rem; color: var(--purple2); margin-top: 2px; }
+    .search-empty { text-align: center; padding: 48px 20px; color: var(--text2); font-size: 0.9rem; }
+
+    /* ══ 폼 오버레이 (추가/수정) ══ */
+    #form-overlay {
+      position: fixed; inset: 0; z-index: 2100;
+      background: var(--bg); display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #form-overlay.open { transform: translateY(0); }
+    .form-header {
+      background: var(--purple); color: white; padding: 16px 16px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .form-header h2 { font-family: 'Jua', sans-serif; font-size: 1.1rem; flex: 1; }
+    .form-back { background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer; }
+    .form-body { flex: 1; overflow-y: auto; padding: 20px 16px 40px; }
+
+    .form-place-card {
+      background: white; border-radius: 16px; padding: 14px 16px;
+      margin-bottom: 20px; box-shadow: 0 2px 12px var(--shadow);
+    }
+    .form-place-name { font-weight: 700; font-size: 1rem; color: var(--text); }
+    .form-place-addr { font-size: 0.8rem; color: var(--text2); margin-top: 3px; }
+
+    .form-section { margin-bottom: 22px; }
+    .form-label { font-size: 0.85rem; color: var(--text2); margin-bottom: 10px; display: block; font-weight: 500; }
+
+    /* 콜키지 여부 선택 */
+    .status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .status-opt {
+      border: 2px solid #E8D5F5; border-radius: 12px; padding: 12px 6px;
+      text-align: center; cursor: pointer; transition: all 0.15s;
+      font-size: 0.78rem; color: var(--text2);
+    }
+    .status-opt .s-icon { font-size: 1.4rem; display: block; margin-bottom: 4px; }
+    .status-opt.active { color: white; border-color: transparent; }
+    .status-opt.active.free    { background: var(--free); }
+    .status-opt.active.paid    { background: var(--paid); }
+    .status-opt.active.no      { background: var(--no); }
+    .status-opt.active.unknown { background: var(--unknown); }
+
+    /* 비용 입력 */
+    .fee-input-wrap { display: flex; align-items: center; gap: 8px; }
+    .form-input {
+      flex: 1; border: 2px solid #E8D5F5; border-radius: 12px;
+      padding: 12px 14px; font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.95rem; outline: none; transition: border-color 0.2s; background: white;
+    }
+    .form-input:focus { border-color: var(--purple); }
+    .fee-unit { font-size: 0.9rem; color: var(--text2); flex-shrink: 0; }
+
+    /* 주종 선택 */
+    .alcohol-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .alcohol-opt {
+      border: 2px solid #E8D5F5; border-radius: 12px; padding: 11px 8px;
+      text-align: center; cursor: pointer; font-size: 0.82rem; color: var(--text2);
+      transition: all 0.15s; background: white;
+    }
+    .alcohol-opt .a-icon { font-size: 1.3rem; display: block; margin-bottom: 3px; }
+    .alcohol-opt.active { border-color: var(--purple); background: #F5EEFF; color: var(--purple); font-weight: 600; }
+
+    /* 잔 제공 */
+    .glass-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .glass-opt {
+      border: 2px solid #E8D5F5; border-radius: 12px; padding: 12px;
+      text-align: center; cursor: pointer; font-size: 0.82rem; color: var(--text2);
+      transition: all 0.15s; background: white;
+    }
+    .glass-opt .g-icon { font-size: 1.3rem; display: block; margin-bottom: 3px; }
+    .glass-opt.active { border-color: var(--purple); background: #F5EEFF; color: var(--purple); font-weight: 600; }
+
+    /* 메모 */
+    .form-textarea {
+      width: 100%; border: 2px solid #E8D5F5; border-radius: 12px;
+      padding: 12px 14px; font-family: 'Noto Sans KR', sans-serif; font-size: 0.9rem;
+      outline: none; resize: none; min-height: 80px; background: white;
+      transition: border-color 0.2s;
+    }
+    .form-textarea:focus { border-color: var(--purple); }
+
+    .btn-submit {
+      width: 100%; background: linear-gradient(135deg, var(--purple), var(--purple2));
+      border: none; border-radius: 16px; padding: 16px;
+      color: white; font-family: 'Jua', sans-serif; font-size: 1.1rem;
+      cursor: pointer; box-shadow: 0 4px 16px var(--shadow);
+      margin-top: 8px; transition: transform 0.15s;
+    }
+    .btn-submit:active { transform: scale(0.97); }
+
+    /* ══ 맵 마커 ══ */
+    .map-marker {
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+      width: 36px; height: 36px; border: 2.5px solid white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3); cursor: pointer;
+    }
+    .map-marker .inner {
+      transform: rotate(45deg); font-size: 0.68rem; font-weight: 700;
+      color: white; line-height: 1; text-align: center;
+    }
+    .map-marker.free    { background: var(--free); }
+    .map-marker.paid    { background: var(--paid); }
+    .map-marker.no      { background: var(--no); }
+    .map-marker.unknown { background: var(--unknown); }
+
+    /* ══ 로딩 ══ */
+    .loading-overlay { position: fixed; inset: 0; background: rgba(108,52,131,0.6); display: flex; align-items: center; justify-content: center; z-index: 9998; }
+    .spinner { width: 44px; height: 44px; border: 4px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ══ 토스트 ══ */
+    .toast {
+      position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+      background: rgba(44,62,80,0.9); color: white; border-radius: 12px;
+      padding: 12px 20px; font-size: 0.88rem; z-index: 9000; white-space: nowrap;
+      animation: toastIn 0.3s ease;
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<!-- ════ 로그인 화면 ════ -->
+<div id="login-screen">
+  <div class="login-logo">🍷</div>
+  <div class="login-title">콜키지도</div>
+  <div class="login-sub">서울 콜키지 가능 식당 지도</div>
+  <button class="btn-google" onclick="signInGoogle()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+    Google로 시작하기
+  </button>
+</div>
+
+<!-- ════ 헤더 ════ -->
+<div id="header" class="hidden">
+  <div class="header-title">🍷 콜키지도</div>
+  <div class="search-bar" onclick="openSearch()">
+    <span>🔍</span>
+    <span>식당 검색...</span>
+  </div>
+  <div class="avatar" id="user-avatar" onclick="signOut()">
+    <span id="avatar-initial">?</span>
+  </div>
+</div>
+
+<!-- ════ 필터 바 ════ -->
+<div id="filter-bar" class="hidden">
+  <div class="filter-chip active" data-filter="all" onclick="setFilter('all')">전체</div>
+  <div class="filter-chip" data-filter="free" onclick="setFilter('free')">
+    <span class="dot" style="background:var(--free)"></span> 무료
+  </div>
+  <div class="filter-chip" data-filter="paid" onclick="setFilter('paid')">
+    <span class="dot" style="background:var(--paid)"></span> 유료
+  </div>
+  <div class="filter-chip" data-filter="no" onclick="setFilter('no')">
+    <span class="dot" style="background:var(--no)"></span> 불가
+  </div>
+  <div class="filter-chip" data-filter="unknown" onclick="setFilter('unknown')">
+    <span class="dot" style="background:var(--unknown)"></span> 정보없음
+  </div>
+</div>
+
+<!-- ════ 지도 ════ -->
+<div id="map" class="hidden"></div>
+
+<!-- ════ FAB ════ -->
+<button id="fab" class="hidden" onclick="openFormForAdd()">+</button>
+
+<!-- ════ 바텀 시트 (상세) ════ -->
+<div id="bottom-sheet">
+  <button class="btn-close-sheet" onclick="closeSheet()">✕</button>
+  <div class="sheet-handle"></div>
+  <div class="sheet-content">
+    <div class="sheet-name" id="sh-name">-</div>
+    <div class="sheet-addr" id="sh-addr">📍 -</div>
+    <div class="sheet-divider"></div>
+
+    <div class="info-row">
+      <span class="info-icon">🍷</span>
+      <span class="info-label">콜키지</span>
+      <span class="info-value"><span class="status-badge" id="sh-status">-</span></span>
+    </div>
+    <div class="info-row" id="sh-fee-row">
+      <span class="info-icon">💰</span>
+      <span class="info-label">비용</span>
+      <span class="info-value" id="sh-fee">-</span>
+    </div>
+    <div class="info-row">
+      <span class="info-icon">🥂</span>
+      <span class="info-label">잔 제공</span>
+      <span class="info-value" id="sh-glass">-</span>
+    </div>
+    <div class="info-row" id="sh-alcohol-row">
+      <span class="info-icon">🍾</span>
+      <span class="info-label">주종</span>
+      <div class="info-value">
+        <div class="alcohol-tags" id="sh-alcohol"></div>
+      </div>
+    </div>
+    <div class="info-row" id="sh-memo-row">
+      <span class="info-icon">📝</span>
+      <span class="info-label">메모</span>
+      <span class="info-value" id="sh-memo" style="font-size:0.85rem;color:var(--text2)">-</span>
+    </div>
+    <div class="sheet-meta" id="sh-meta"></div>
+    <div class="sheet-actions">
+      <button class="btn-edit" onclick="openFormForEdit()">✏️ 정보 수정</button>
+      <button class="btn-report" onclick="reportPlace()">🚨 오류 신고</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ 검색 오버레이 ════ -->
+<div id="search-overlay">
+  <div class="search-overlay-header">
+    <div class="search-input-wrap">
+      <span class="search-icon-abs">🔍</span>
+      <input type="text" id="search-input" class="search-input" placeholder="식당 이름 검색..."
+        oninput="onSearchInput(this.value)" autocomplete="off">
+    </div>
+    <button class="btn-cancel" onclick="closeSearch()">취소</button>
+  </div>
+  <div class="search-results" id="search-results">
+    <div class="search-empty">식당 이름을 입력해주세요</div>
+  </div>
+</div>
+
+<!-- ════ 폼 오버레이 (추가/수정) ════ -->
+<div id="form-overlay">
+  <div class="form-header">
+    <button class="form-back" onclick="closeForm()">←</button>
+    <h2 id="form-title">식당 추가</h2>
+  </div>
+  <div class="form-body">
+    <!-- 선택된 식당 -->
+    <div class="form-place-card" id="form-place-card">
+      <div class="form-place-name" id="form-place-name">-</div>
+      <div class="form-place-addr" id="form-place-addr">-</div>
+    </div>
+
+    <!-- 콜키지 여부 -->
+    <div class="form-section">
+      <label class="form-label">🍷 콜키지 여부</label>
+      <div class="status-grid">
+        <div class="status-opt free" data-val="free" onclick="selectStatus('free')">
+          <span class="s-icon">✅</span>무료
+        </div>
+        <div class="status-opt paid" data-val="paid" onclick="selectStatus('paid')">
+          <span class="s-icon">💰</span>유료
+        </div>
+        <div class="status-opt no" data-val="no" onclick="selectStatus('no')">
+          <span class="s-icon">❌</span>불가
+        </div>
+        <div class="status-opt unknown" data-val="unknown" onclick="selectStatus('unknown')">
+          <span class="s-icon">❓</span>모름
+        </div>
+      </div>
+    </div>
+
+    <!-- 비용 (유료일 때만) -->
+    <div class="form-section hidden" id="fee-section">
+      <label class="form-label">💰 콜키지 비용</label>
+      <div class="fee-input-wrap">
+        <input type="number" id="form-fee" class="form-input" placeholder="예: 10000" min="0" step="1000">
+        <span class="fee-unit">원</span>
+      </div>
+    </div>
+
+    <!-- 주종 -->
+    <div class="form-section">
+      <label class="form-label">🍾 가능 주종 <span style="font-size:0.75rem;opacity:0.7">(복수 선택)</span></label>
+      <div class="alcohol-grid">
+        <div class="alcohol-opt" data-val="wine" onclick="toggleAlcohol('wine')"><span class="a-icon">🍷</span>와인</div>
+        <div class="alcohol-opt" data-val="beer" onclick="toggleAlcohol('beer')"><span class="a-icon">🍺</span>맥주</div>
+        <div class="alcohol-opt" data-val="soju" onclick="toggleAlcohol('soju')"><span class="a-icon">🥃</span>소주</div>
+        <div class="alcohol-opt" data-val="makgeolli" onclick="toggleAlcohol('makgeolli')"><span class="a-icon">🍶</span>막걸리</div>
+        <div class="alcohol-opt" data-val="whiskey" onclick="toggleAlcohol('whiskey')"><span class="a-icon">🥃</span>위스키</div>
+        <div class="alcohol-opt" data-val="all" onclick="toggleAlcohol('all')"><span class="a-icon">🍾</span>전체</div>
+      </div>
+    </div>
+
+    <!-- 잔 제공 -->
+    <div class="form-section">
+      <label class="form-label">🥂 잔 제공 여부</label>
+      <div class="glass-grid">
+        <div class="glass-opt" data-val="true" onclick="selectGlass('true')"><span class="g-icon">✅</span>있음</div>
+        <div class="glass-opt" data-val="false" onclick="selectGlass('false')"><span class="g-icon">❌</span>없음</div>
+        <div class="glass-opt" data-val="null" onclick="selectGlass('null')"><span class="g-icon">❓</span>모름</div>
+      </div>
+    </div>
+
+    <!-- 메모 -->
+    <div class="form-section">
+      <label class="form-label">📝 메모 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
+      <textarea id="form-memo" class="form-textarea" placeholder="예: 저녁만 가능, 1병 무료 등..."></textarea>
+    </div>
+
+    <button class="btn-submit" id="form-submit-btn" onclick="submitForm()">등록하기</button>
+  </div>
+</div>
+
+<!-- 로딩 -->
+<div class="loading-overlay hidden" id="loading"><div class="spinner"></div></div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<!-- Leaflet -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Kakao Maps SDK (Places 검색용) -->
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e5ed844650432c56d73361aec1d06927&libraries=services"></script>
+<script>
+/* ════ 초기화 ════ */
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+const ALCOHOL_LABELS = { wine:'와인', beer:'맥주', soju:'소주', makgeolli:'막걸리', whiskey:'위스키', all:'전체' };
+const STATUS_LABELS  = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보 없음' };
+const GLASS_LABELS   = { 'true':'있음', 'false':'없음', 'null':'모름' };
+
+let map, currentUser;
+let markers = {};       // docId → Leaflet marker
+let allDocs  = [];      // 전체 문서 캐시
+let activeFilter = 'all';
+let currentDocId = null; // 바텀 시트에 열린 문서
+let formMode = 'add';    // 'add' | 'edit'
+let selectedPlace = null; // Kakao 검색 결과에서 선택된 식당
+
+// 폼 상태
+let formStatus    = '';
+let formAlcohol   = new Set();
+let formGlass     = '';
+
+/* ════ 인증 ════ */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    showApp();
+  } else {
+    currentUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    ['header','filter-bar','map','fab'].forEach(id => document.getElementById(id).classList.add('hidden'));
+  }
+});
+
+function signInGoogle() {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(e => alert('로그인 실패: ' + e.message));
+}
+
+function signOut() {
+  if (confirm('로그아웃 하시겠어요?')) auth.signOut();
+}
+
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  ['header','filter-bar','map','fab'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+
+  // 아바타
+  const avatarEl = document.getElementById('user-avatar');
+  if (currentUser.photoURL) {
+    avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
+  } else {
+    document.getElementById('avatar-initial').textContent = (currentUser.displayName||'U')[0];
+  }
+
+  if (!map) initMap();
+  loadPlaces();
+}
+
+/* ════ 지도 ════ */
+function initMap() {
+  map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap'
+  }).addTo(map);
+  L.control.zoom({ position: 'bottomleft' }).addTo(map);
+  map.on('click', () => closeSheet());
+}
+
+function createMarkerIcon(status) {
+  const labels = { free:'무료', paid:'유료', no:'불가', unknown:'?' };
+  return L.divIcon({
+    html: `<div class="map-marker ${status}"><div class="inner">${labels[status]||'?'}</div></div>`,
+    className: '', iconSize: [36, 36], iconAnchor: [18, 36], popupAnchor: [0, -38],
+  });
+}
+
+/* ════ 데이터 로드 ════ */
+async function loadPlaces() {
+  showLoading();
+  try {
+    const snap = await db.collection('corkage').get();
+    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMarkers();
+  } catch(e) {
+    showToast('데이터 로드 실패: ' + e.message);
+  }
+  hideLoading();
+
+  // 실시간 업데이트
+  db.collection('corkage').onSnapshot(snap => {
+    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMarkers();
+  });
+}
+
+function renderMarkers() {
+  // 기존 마커 제거
+  Object.values(markers).forEach(m => map.removeLayer(m));
+  markers = {};
+
+  const filtered = activeFilter === 'all' ? allDocs : allDocs.filter(d => d.corkageStatus === activeFilter);
+
+  filtered.forEach(doc => {
+    if (!doc.lat || !doc.lng) return;
+    const marker = L.marker([doc.lat, doc.lng], { icon: createMarkerIcon(doc.corkageStatus || 'unknown') });
+    marker.on('click', (e) => { e.originalEvent.stopPropagation(); openSheet(doc.id); });
+    marker.addTo(map);
+    markers[doc.id] = marker;
+  });
+}
+
+/* ════ 필터 ════ */
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  renderMarkers();
+}
+
+/* ════ 바텀 시트 ════ */
+function openSheet(docId) {
+  const doc = allDocs.find(d => d.id === docId);
+  if (!doc) return;
+  currentDocId = docId;
+
+  document.getElementById('sh-name').textContent = doc.name;
+  document.getElementById('sh-addr').textContent = '📍 ' + (doc.address || '-');
+
+  // 콜키지 상태 뱃지
+  const statusEl = document.getElementById('sh-status');
+  statusEl.textContent = STATUS_LABELS[doc.corkageStatus] || '정보 없음';
+  statusEl.className = 'status-badge ' + (doc.corkageStatus || 'unknown');
+
+  // 비용
+  const feeRow = document.getElementById('sh-fee-row');
+  if (doc.corkageStatus === 'paid' && doc.corkageFee) {
+    document.getElementById('sh-fee').textContent = doc.corkageFee.toLocaleString() + '원';
+    feeRow.classList.remove('hidden');
+  } else {
+    feeRow.classList.add('hidden');
+  }
+
+  // 잔 제공
+  const glassMap = { 'true':'✅ 있음', 'false':'❌ 없음', 'null':'❓ 모름' };
+  document.getElementById('sh-glass').textContent = glassMap[String(doc.glassProvided)] || '❓ 모름';
+
+  // 주종
+  const alcoholRow = document.getElementById('sh-alcohol-row');
+  const alcoholEl  = document.getElementById('sh-alcohol');
+  if (doc.alcoholTypes && doc.alcoholTypes.length) {
+    alcoholEl.innerHTML = doc.alcoholTypes.map(a => `<span class="alcohol-tag">${ALCOHOL_LABELS[a]||a}</span>`).join('');
+    alcoholRow.classList.remove('hidden');
+  } else { alcoholRow.classList.add('hidden'); }
+
+  // 메모
+  const memoRow = document.getElementById('sh-memo-row');
+  if (doc.memo) {
+    document.getElementById('sh-memo').textContent = doc.memo;
+    memoRow.classList.remove('hidden');
+  } else { memoRow.classList.add('hidden'); }
+
+  // 메타
+  const name = doc.addedBy?.name || '익명';
+  const date = doc.addedAt?.toDate ? doc.addedAt.toDate().toLocaleDateString('ko-KR') : '';
+  document.getElementById('sh-meta').textContent = `${name} 등록${date ? ' · ' + date : ''}`;
+
+  document.getElementById('bottom-sheet').classList.add('open');
+}
+
+function closeSheet() {
+  document.getElementById('bottom-sheet').classList.remove('open');
+  currentDocId = null;
+}
+
+/* ════ 검색 ════ */
+let searchTimer = null;
+let _ps = null;
+
+function getPS() {
+  if (_ps) return _ps;
+  try {
+    if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
+      _ps = new kakao.maps.services.Places();
+    }
+  } catch(e) {}
+  return _ps;
+}
+
+function openSearch() {
+  document.getElementById('search-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('search-input').focus(), 300);
+}
+
+function closeSearch() {
+  document.getElementById('search-overlay').classList.remove('open');
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-results').innerHTML = '<div class="search-empty">식당 이름을 입력해주세요</div>';
+}
+
+function onSearchInput(val) {
+  clearTimeout(searchTimer);
+  if (!val.trim()) {
+    document.getElementById('search-results').innerHTML = '<div class="search-empty">식당 이름을 입력해주세요</div>';
+    return;
+  }
+  searchTimer = setTimeout(() => doSearch(val.trim()), 400);
+}
+
+function doSearch(query) {
+  const ps = getPS();
+  if (!ps) {
+    document.getElementById('search-results').innerHTML = '<div class="search-empty">검색 서비스 로딩 중입니다...</div>';
+    return;
+  }
+  document.getElementById('search-results').innerHTML = '<div class="search-empty">검색 중...</div>';
+  ps.keywordSearch(query, (results, status) => {
+    if (status === kakao.maps.services.Status.OK && results.length > 0) {
+      document.getElementById('search-results').innerHTML = results.map((r, i) => `
+        <div class="search-item" onclick="selectFromSearch(${i})">
+          <div class="search-item-name">${r.place_name}</div>
+          <div class="search-item-addr">${r.road_address_name || r.address_name}</div>
+          <div class="search-item-cat">${r.category_name}</div>
+        </div>
+      `).join('');
+      window._searchResults = results;
+    } else {
+      document.getElementById('search-results').innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
+    }
+  }, {
+    location: new kakao.maps.LatLng(37.5665, 126.9780),
+    radius: 25000,
+    sort: kakao.maps.services.SortBy.DISTANCE,
+  });
+}
+
+function selectFromSearch(idx) {
+  const r = window._searchResults[idx];
+  selectedPlace = {
+    name:    r.place_name,
+    address: r.road_address_name || r.address_name,
+    lat:     parseFloat(r.y),
+    lng:     parseFloat(r.x),
+    kakaoId: r.id,
+    phone:   r.phone || '',
+    category: r.category_name || '',
+  };
+  closeSearch();
+  openFormForAdd();
+}
+
+/* ════ 폼 ════ */
+function resetForm() {
+  formStatus  = '';
+  formAlcohol = new Set();
+  formGlass   = '';
+  document.querySelectorAll('.status-opt').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.alcohol-opt').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.glass-opt').forEach(el => el.classList.remove('active'));
+  document.getElementById('form-fee').value = '';
+  document.getElementById('form-memo').value = '';
+  document.getElementById('fee-section').classList.add('hidden');
+}
+
+function openFormForAdd() {
+  if (!selectedPlace) { openSearch(); return; }
+  formMode = 'add';
+  resetForm();
+  document.getElementById('form-title').textContent = '식당 추가';
+  document.getElementById('form-place-name').textContent = selectedPlace.name;
+  document.getElementById('form-place-addr').textContent = selectedPlace.address;
+  document.getElementById('form-submit-btn').textContent = '등록하기';
+  closeSheet();
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+async function openFormForEdit() {
+  if (!currentDocId) return;
+  const doc = allDocs.find(d => d.id === currentDocId);
+  if (!doc) return;
+  formMode = 'edit';
+  resetForm();
+  document.getElementById('form-title').textContent = '정보 수정';
+  document.getElementById('form-place-name').textContent = doc.name;
+  document.getElementById('form-place-addr').textContent = doc.address;
+  document.getElementById('form-submit-btn').textContent = '수정 저장';
+  selectedPlace = { name: doc.name, address: doc.address, lat: doc.lat, lng: doc.lng, kakaoId: doc.kakaoId || '' };
+
+  // 기존 값 채우기
+  if (doc.corkageStatus) selectStatus(doc.corkageStatus);
+  if (doc.corkageFee) document.getElementById('form-fee').value = doc.corkageFee;
+  if (doc.alcoholTypes) doc.alcoholTypes.forEach(a => toggleAlcohol(a));
+  if (doc.glassProvided !== undefined && doc.glassProvided !== null) selectGlass(String(doc.glassProvided));
+  if (doc.memo) document.getElementById('form-memo').value = doc.memo;
+
+  closeSheet();
+  document.getElementById('form-overlay').classList.add('open');
+}
+
+function closeForm() {
+  document.getElementById('form-overlay').classList.remove('open');
+}
+
+function selectStatus(val) {
+  formStatus = val;
+  document.querySelectorAll('.status-opt').forEach(el => el.classList.toggle('active', el.dataset.val === val));
+  document.getElementById('fee-section').classList.toggle('hidden', val !== 'paid');
+}
+
+function toggleAlcohol(val) {
+  const el = document.querySelector(`.alcohol-opt[data-val="${val}"]`);
+  if (formAlcohol.has(val)) { formAlcohol.delete(val); el?.classList.remove('active'); }
+  else { formAlcohol.add(val); el?.classList.add('active'); }
+}
+
+function selectGlass(val) {
+  formGlass = val;
+  document.querySelectorAll('.glass-opt').forEach(el => el.classList.toggle('active', el.dataset.val === val));
+}
+
+async function submitForm() {
+  if (!formStatus) { showToast('콜키지 여부를 선택해주세요.'); return; }
+  if (!selectedPlace) { showToast('식당 정보가 없습니다.'); return; }
+
+  const fee = formStatus === 'paid' ? (parseInt(document.getElementById('form-fee').value) || null) : null;
+  const glassVal = formGlass === 'true' ? true : formGlass === 'false' ? false : null;
+
+  const data = {
+    name:          selectedPlace.name,
+    address:       selectedPlace.address,
+    lat:           selectedPlace.lat,
+    lng:           selectedPlace.lng,
+    kakaoId:       selectedPlace.kakaoId || '',
+    corkageStatus: formStatus,
+    corkageFee:    fee,
+    alcoholTypes:  [...formAlcohol],
+    glassProvided: glassVal,
+    memo:          document.getElementById('form-memo').value.trim(),
+  };
+
+  showLoading();
+  try {
+    if (formMode === 'add') {
+      // 이미 같은 kakaoId 등록됐는지 체크
+      if (selectedPlace.kakaoId) {
+        const exist = allDocs.find(d => d.kakaoId === selectedPlace.kakaoId);
+        if (exist) { hideLoading(); showToast('이미 등록된 식당이에요. 수정 기능을 이용해주세요.'); closeForm(); openSheet(exist.id); return; }
+      }
+      await db.collection('corkage').add({
+        ...data,
+        addedBy: { uid: currentUser.uid, name: currentUser.displayName || '익명' },
+        addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      showToast('✅ 등록 완료!');
+    } else {
+      await db.collection('corkage').doc(currentDocId).update({
+        ...data,
+        updatedBy: { uid: currentUser.uid, name: currentUser.displayName || '익명' },
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+      showToast('✅ 수정 완료!');
+    }
+    closeForm();
+    selectedPlace = null;
+  } catch(e) {
+    showToast('저장 실패: ' + e.message);
+  }
+  hideLoading();
+}
+
+async function reportPlace() {
+  if (!currentDocId) return;
+  if (!confirm('이 정보가 잘못됐나요? 신고하시겠어요?')) return;
+  try {
+    await db.collection('reports').add({
+      docId: currentDocId,
+      reportedBy: { uid: currentUser.uid, name: currentUser.displayName || '익명' },
+      reportedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast('신고가 접수됐습니다. 감사합니다.');
+  } catch(e) { showToast('신고 실패: ' + e.message); }
+}
+
+/* ════ 유틸 ════ */
+function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+
+let toastTimer;
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  const old = document.querySelector('.toast');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  toastTimer = setTimeout(() => el.remove(), 2800);
+}
+
+/* ════ SW ════ */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    reg.update();
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      sw.addEventListener('statechange', () => {
+        if (sw.state === 'installed' && navigator.serviceWorker.controller) sw.postMessage({ type: 'SKIP_WAITING' });
+      });
+    });
+  });
+  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+}
+</script>
+</body>
+</html>
