@@ -1,5 +1,5 @@
-// v:2026-04-29T08:20:40
-const CACHE = 'kolkijido-v:2026-04-29T08:20:40';
+// v:2026-04-29T08:40:27
+const CACHE = 'kolkijido-v:2026-04-29T08:40:27';
 
 self.addEventListener('install', e => {
   self.skipWaiting();
