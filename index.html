@@ -724,12 +724,16 @@ function closeSheet() {
   currentDocId = null;
 }
 
-/* ════ Kakao Places 초기화 ════ */
+/* ════ Kakao Places 초기화 (실패해도 앱 전체가 죽지 않도록 try-catch) ════ */
 let _kakaoPS = null;
-kakao.maps.load(() => {
-  _kakaoPS = new kakao.maps.services.Places();
-  console.log('[Kakao] Places service ready');
-});
+try {
+  kakao.maps.load(() => {
+    try {
+      _kakaoPS = new kakao.maps.services.Places();
+      console.log('[Kakao] Places service ready');
+    } catch(e) { console.warn('[Kakao] Places init failed:', e); }
+  });
+} catch(e) { console.warn('[Kakao] SDK not available:', e); }
 
 /* ════ 검색 ════ */
 let searchTimer = null;
@@ -779,17 +783,21 @@ function doSearch(query) {
     });
   } else {
     // ── Nominatim 폴백 ──
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 서울')}&format=json&accept-language=ko&countrycodes=kr&limit=15`,
-      { headers: { 'Accept-Language': 'ko' } })
-      .then(r => r.json())
+    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 서울')}&format=json&accept-language=ko&countrycodes=kr&limit=15&addressdetails=1`,
+      { headers: { 'Accept-Language': 'ko', 'User-Agent': 'kolkijido/1.0' } })
+      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
       .then(places => {
-        if (!places.length) { resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>'; return; }
+        if (!places.length) {
+          resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다<br><small style="font-size:0.75rem">지역명 포함해서 검색해보세요 (예: 강남 이탈리안)</small></div>';
+          return;
+        }
         window._searchResults = { type: 'nominatim', data: places };
         resultsEl.innerHTML = places.map((r, i) => {
           const name = r.name || r.display_name.split(',')[0].trim();
+          const addr = r.display_name.split(',').slice(0, 4).join(', ');
           return `<div class="search-item" onclick="selectFromSearch(${i})">
             <div class="search-item-name">${name}</div>
-            <div class="search-item-addr">${r.display_name.split(',').slice(0, 4).join(', ')}</div>
+            <div class="search-item-addr">${addr}</div>
           </div>`;
         }).join('');
       })
