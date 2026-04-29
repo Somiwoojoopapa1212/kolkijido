@@ -540,23 +540,6 @@
 <script src="firebase-config.js"></script>
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Kakao Maps SDK: document.write 차단 우회 -->
-<script>
-(function() {
-  var orig = document.write.bind(document);
-  document.write = function(html) {
-    var m = html.match(/src=["']([^"']+)["']/);
-    if (m && m[1]) {
-      var s = document.createElement('script');
-      s.src = m[1]; s.async = false;
-      document.head.appendChild(s);
-    } else { orig(html); }
-  };
-  window._restoreWrite = function() { document.write = orig; };
-})();
-</script>
-<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=e5ed844650432c56d73361aec1d06927&libraries=services&autoload=false"
-  onload="window._restoreWrite && window._restoreWrite()"></script>
 <script>
 /* ════ 초기화 ════ */
 firebase.initializeApp(firebaseConfig);
@@ -739,24 +722,7 @@ function closeSheet() {
   currentDocId = null;
 }
 
-/* ════ Kakao Places 초기화 (1초마다 최대 10번 재시도) ════ */
-let _kakaoPS = null;
-
-function tryInitKakao(retries) {
-  if (_kakaoPS) return;
-  try {
-    if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services &&
-        typeof kakao.maps.services.Places === 'function') {
-      _kakaoPS = new kakao.maps.services.Places();
-      console.log('[Kakao] Places ready ✅');
-      return;
-    }
-    console.log(`[Kakao] 초기화 대기 중... (남은 시도: ${retries})`);
-  } catch(e) { console.warn('[Kakao] 오류:', e); }
-  if (retries > 0) setTimeout(() => tryInitKakao(retries - 1), 1000);
-  else console.warn('[Kakao] 초기화 실패 - Nominatim 폴백 사용');
-}
-window.addEventListener('load', () => tryInitKakao(10));
+const KAKAO_REST_KEY = '993c5a992861be3eea43cb5ee7f68376';
 
 /* ════ 검색 ════ */
 let searchTimer = null;
@@ -781,50 +747,49 @@ function onSearchInput(val) {
   searchTimer = setTimeout(() => doSearch(val.trim()), 500);
 }
 
-function doSearch(query) {
+async function doSearch(query) {
   const resultsEl = document.getElementById('search-results');
   resultsEl.innerHTML = '<div class="search-empty">검색 중...</div>';
 
-  if (_kakaoPS) {
-    // ── Kakao Places 검색 ──
-    _kakaoPS.keywordSearch(query, (results, status) => {
-      if (status === kakao.maps.services.Status.OK && results.length > 0) {
-        window._searchResults = { type: 'kakao', data: results };
-        resultsEl.innerHTML = results.map((r, i) => `
-          <div class="search-item" onclick="selectFromSearch(${i})">
-            <div class="search-item-name">${r.place_name}</div>
-            <div class="search-item-addr">${r.road_address_name || r.address_name}</div>
-            <div class="search-item-cat">${r.category_name}</div>
-          </div>`).join('');
-      } else {
-        resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
-      }
-    }, {
-      location: new kakao.maps.LatLng(37.5665, 126.9780),
-      radius: 30000,
-      sort: kakao.maps.services.SortBy.DISTANCE,
+  // ── Kakao REST API (CORS 프록시 경유) ──
+  try {
+    const kakaoUrl = `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=15`;
+    const resp = await fetch(`https://corsproxy.io/?${encodeURIComponent(kakaoUrl)}`, {
+      headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
     });
-  } else {
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const places = data.documents || [];
+    if (places.length) {
+      window._searchResults = { type: 'kakao', data: places };
+      resultsEl.innerHTML = places.map((r, i) => `
+        <div class="search-item" onclick="selectFromSearch(${i})">
+          <div class="search-item-name">${r.place_name}</div>
+          <div class="search-item-addr">${r.road_address_name || r.address_name}</div>
+          <div class="search-item-cat">${r.category_name}</div>
+        </div>`).join('');
+      return;
+    }
+    resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
+  } catch(e) {
     // ── Nominatim 폴백 ──
-    fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 서울')}&format=json&accept-language=ko&countrycodes=kr&limit=15&addressdetails=1`,
-      { headers: { 'Accept-Language': 'ko', 'User-Agent': 'kolkijido/1.0' } })
-      .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-      .then(places => {
-        if (!places.length) {
-          resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다<br><small style="font-size:0.75rem">지역명 포함해서 검색해보세요 (예: 강남 이탈리안)</small></div>';
-          return;
-        }
-        window._searchResults = { type: 'nominatim', data: places };
-        resultsEl.innerHTML = places.map((r, i) => {
-          const name = r.name || r.display_name.split(',')[0].trim();
-          const addr = r.display_name.split(',').slice(0, 4).join(', ');
-          return `<div class="search-item" onclick="selectFromSearch(${i})">
-            <div class="search-item-name">${name}</div>
-            <div class="search-item-addr">${addr}</div>
-          </div>`;
-        }).join('');
-      })
-      .catch(e => { resultsEl.innerHTML = `<div class="search-empty">검색 실패: ${e.message}</div>`; });
+    console.warn('[Kakao REST 실패, Nominatim 폴백]', e.message);
+    try {
+      const resp2 = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + ' 서울')}&format=json&accept-language=ko&countrycodes=kr&limit=15`,
+        { headers: { 'Accept-Language': 'ko' } }
+      );
+      const places2 = await resp2.json();
+      if (!places2.length) { resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>'; return; }
+      window._searchResults = { type: 'nominatim', data: places2 };
+      resultsEl.innerHTML = places2.map((r, i) => {
+        const name = r.name || r.display_name.split(',')[0].trim();
+        return `<div class="search-item" onclick="selectFromSearch(${i})">
+          <div class="search-item-name">${name}</div>
+          <div class="search-item-addr">${r.display_name.split(',').slice(0,4).join(', ')}</div>
+        </div>`;
+      }).join('');
+    } catch(e2) { resultsEl.innerHTML = `<div class="search-empty">검색 실패: ${e2.message}</div>`; }
   }
 }
 
