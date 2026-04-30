@@ -621,12 +621,21 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-function signInGoogle() {
+async function signInGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  // signInWithRedirect: 카카오/인앱 브라우저 호환
-  auth.signInWithRedirect(provider).catch(e => alert('로그인 실패: ' + e.message));
+  try {
+    // 팝업 우선 시도
+    await auth.signInWithPopup(provider);
+  } catch(e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      // 팝업 차단 시 리다이렉트 방식으로 폴백 (카카오/인앱 브라우저)
+      auth.signInWithRedirect(provider);
+    } else {
+      alert('로그인 실패: ' + e.message);
+    }
+  }
 }
-// 리다이렉트 로그인 결과 처리
+// 리다이렉트 후 결과 처리
 auth.getRedirectResult().catch(e => console.warn('Redirect result:', e));
 
 function signOut() {
