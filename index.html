@@ -532,6 +532,62 @@
     .list-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .list-card-alcohol { font-size: 0.72rem; color: var(--purple2); }
     .list-card-vote   { font-size: 0.72rem; color: var(--text2); }
+    .list-card-dist   { font-size: 0.72rem; color: var(--purple); font-weight: 600; }
+    .list-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; padding: 0 2px;
+    }
+    .list-count { font-size: 0.82rem; color: var(--text2); }
+    .list-sort-btn {
+      background: white; border: 1.5px solid #E8D5F5; border-radius: 16px;
+      padding: 5px 12px; font-size: 0.78rem; color: var(--purple);
+      cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+    }
+    .list-sort-btn.active { background: var(--purple); color: white; border-color: var(--purple); }
+
+    /* NEW 배지 */
+    .new-badge {
+      display: inline-block; background: #E74C3C; color: white;
+      font-size: 0.6rem; font-weight: 700; border-radius: 4px;
+      padding: 1px 5px; margin-left: 6px; vertical-align: middle;
+      letter-spacing: 0.03em;
+    }
+
+    /* ══ 다크 모드 ══ */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111118; --white: #1E1E2C;
+        --text: #E4E4F0; --text2: #8888A8;
+        --shadow: rgba(0,0,0,0.5);
+      }
+      #login-screen, #splash-screen, #kakao-notice {
+        background: linear-gradient(160deg, #3A1548 0%, #0E0518 100%);
+      }
+      #header { background: #3D1A50; }
+      #filter-bar { background: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+      .filter-chip { background: var(--white); border-color: #333355; color: var(--text2); }
+      .filter-chip.active { background: var(--purple); color: white; border-color: var(--purple); }
+      #bottom-sheet, .form-place-card { background: var(--white); }
+      #menu-panel { background: #1A1A28; }
+      .menu-user { background: linear-gradient(135deg, #3D1A50, #5A2A6A); }
+      .sheet-divider, .menu-divider { background: #2A2A3C; }
+      .review-card { background: #1A1A28; border-color: #2A2A3C; }
+      .fav-item, .list-card, .report-card { background: #1E1E2C; }
+      .notice-item { border-bottom-color: #2A2A3C; }
+      .form-input, .form-textarea { background: #2A2A3C; color: var(--text); border-color: #3A3A55; }
+      .login-input { background: rgba(255,255,255,0.1); }
+      .alcohol-opt, .status-opt, .glass-opt,
+      .vote-choice, .btn-action { background: #2A2A3C; border-color: #3A3A55; }
+      #search-overlay, #form-overlay, #review-overlay,
+      #favorites-overlay, #list-view { background: var(--bg); }
+      .search-overlay-header { background: var(--white); border-bottom-color: #2A2A3C; }
+      .search-input { background: var(--white); color: var(--text); border-color: #3A3A55; }
+      .search-item { border-bottom-color: #2A2A3C; }
+      .search-item:active { background: #2A2A3C; }
+      #view-toggle-btn, .list-sort-btn { background: var(--white); border-color: #3A3A55; }
+      .btn-fav-sheet, .btn-share-sheet, .btn-close-sheet { background: #2A2A3C; }
+      .admin-body { background: var(--bg); }
+    }
 
     /* ══ 추천/비추천 (action-bar로 통합) ══ */
 
@@ -1036,6 +1092,8 @@ let selectedPlace = null;
 let currentVote = null;
 let currentFavorite = false;
 let currentView = 'map';
+let sortBy = 'default';
+let userLocation = null;
 let reviewVoteChoice = '';
 let reviewPhotos = [];
 
@@ -1111,9 +1169,13 @@ function showApp() {
 /* ════ 지도 ════ */
 function initMap() {
   map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 13);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-    maxZoom: 19, attribution: '© OpenStreetMap © CARTO'
-  }).addTo(map);
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  L.tileLayer(
+    isDark
+      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' }
+  ).addTo(map);
   L.control.zoom({ position: 'bottomleft' }).addTo(map);
   markerCluster = L.markerClusterGroup({
     maxClusterRadius: 48,
@@ -1187,7 +1249,8 @@ function openSheet(docId) {
   if (!doc) return;
   currentDocId = docId;
 
-  document.getElementById('sh-name').textContent = doc.name;
+  const newBadge = isNew(doc) ? '<span class="new-badge">NEW</span>' : '';
+  document.getElementById('sh-name').innerHTML = doc.name + newBadge;
   document.getElementById('sh-addr').textContent = '📍 ' + (doc.address || '-');
 
   // 카테고리
@@ -1663,6 +1726,21 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.remove(), 2800);
 }
 
+/* ════ 유틸: 거리/NEW 판별 ════ */
+function getDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371, r = Math.PI / 180;
+  const dLat = (lat2 - lat1) * r, dLng = (lng2 - lng1) * r;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*r) * Math.cos(lat2*r) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+function formatDist(km) {
+  return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+}
+function isNew(doc) {
+  if (!doc.addedAt?.seconds) return false;
+  return doc.addedAt.seconds > Date.now() / 1000 - 7 * 86400;
+}
+
 /* ════ 목록 뷰 ════ */
 function toggleView() {
   currentView = currentView === 'map' ? 'list' : 'map';
@@ -1692,30 +1770,73 @@ function toggleView() {
 
 function renderListView() {
   const container = document.getElementById('list-view');
-  const filtered  = activeFilter === 'all' ? allDocs : allDocs.filter(d => d.corkageStatus === activeFilter);
+  let filtered = activeFilter === 'all' ? [...allDocs] : allDocs.filter(d => d.corkageStatus === activeFilter);
+
+  // 거리순 정렬
+  if (sortBy === 'distance' && userLocation) {
+    filtered.forEach(d => {
+      d._dist = (d.lat && d.lng) ? getDistance(userLocation.lat, userLocation.lng, d.lat, d.lng) : 9999;
+    });
+    filtered.sort((a, b) => a._dist - b._dist);
+  }
+
+  const toolbar = `<div class="list-toolbar">
+    <span class="list-count">총 ${filtered.length}개 식당</span>
+    <button class="list-sort-btn ${sortBy === 'distance' ? 'active' : ''}" onclick="toggleListSort()">
+      📍 ${sortBy === 'distance' ? '거리순 ✓' : '거리순'}
+    </button>
+  </div>`;
 
   if (!filtered.length) {
-    container.innerHTML = '<div class="list-empty">해당하는 식당이 없습니다.</div>';
+    container.innerHTML = toolbar + '<div class="list-empty">해당하는 식당이 없습니다.</div>';
     return;
   }
 
   const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'불가', unknown:'정보없음' };
-  container.innerHTML = filtered.map(doc => {
+  const cards = filtered.map(doc => {
+    const newTag  = isNew(doc) ? '<span class="new-badge">NEW</span>' : '';
     const alcohol = doc.alcoholTypes?.length
-      ? `<span class="list-card-alcohol">${doc.alcoholTypes.map(a => ALCOHOL_LABELS[a] || a).join(' · ')}</span>` : '';
+      ? `<span class="list-card-alcohol">${doc.alcoholTypes.map(a => ALCOHOL_LABELS[a]||a).join(' · ')}</span>` : '';
     const vote = (doc.upCount || doc.downCount)
       ? `<span class="list-card-vote">👍 ${doc.upCount||0} · 👎 ${doc.downCount||0}</span>` : '';
+    const dist = (sortBy === 'distance' && doc._dist < 9999)
+      ? `<span class="list-card-dist">📍 ${formatDist(doc._dist)}</span>` : '';
     return `<div class="list-card" onclick="goToPlaceFromList('${doc.id}')">
       <div class="list-card-info">
-        <div class="list-card-name">${doc.name}</div>
+        <div class="list-card-name">${doc.name}${newTag}</div>
         <div class="list-card-addr">📍 ${doc.address || '-'}</div>
-        <div class="list-card-meta">${alcohol}${vote}</div>
+        <div class="list-card-meta">${dist}${alcohol}${vote}</div>
       </div>
-      <span class="status-badge ${doc.corkageStatus || 'unknown'}" style="flex-shrink:0;font-size:0.74rem;white-space:nowrap">
-        ${statusLabel[doc.corkageStatus] || '정보없음'}
+      <span class="status-badge ${doc.corkageStatus||'unknown'}" style="flex-shrink:0;font-size:0.74rem;white-space:nowrap">
+        ${statusLabel[doc.corkageStatus]||'정보없음'}
       </span>
     </div>`;
   }).join('');
+
+  container.innerHTML = toolbar + cards;
+}
+
+function toggleListSort() {
+  if (sortBy === 'distance') {
+    sortBy = 'default';
+    renderListView();
+    return;
+  }
+  if (userLocation) {
+    sortBy = 'distance';
+    renderListView();
+  } else {
+    showToast('📡 위치 확인 중...');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        sortBy = 'distance';
+        renderListView();
+      },
+      () => showToast('위치 권한을 허용해주세요.'),
+      { enableHighAccuracy: false, timeout: 6000 }
+    );
+  }
 }
 
 function goToPlaceFromList(docId) {
