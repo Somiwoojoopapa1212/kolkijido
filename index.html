@@ -1502,7 +1502,9 @@ function openSheet(docId) {
   document.getElementById('sh-reviews').innerHTML = '<div style="color:var(--text2);font-size:0.82rem;padding:8px 0">불러오는 중...</div>';
   loadReviewsForSheet(docId);
 
-  document.getElementById('bottom-sheet').classList.add('open');
+  const sheet = document.getElementById('bottom-sheet');
+  sheet.scrollTop = 0;
+  sheet.classList.add('open');
 }
 
 function closeSheet() {
