@@ -753,6 +753,41 @@
     }
     .menu-logout:active { background: #FDF0F0; }
 
+    /* ══ 지역 필터 시트 ══ */
+    #area-backdrop {
+      position: fixed; inset: 0; z-index: 1200;
+      background: rgba(0,0,0,0.45); display: none;
+    }
+    #area-backdrop.open { display: block; }
+    #area-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 1201;
+      background: white; border-radius: 22px 22px 0 0; padding: 20px 16px 36px;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #area-sheet.open { transform: translateY(0); }
+    .area-sheet-title { font-family: 'Jua', sans-serif; font-size: 1rem; color: var(--text); margin-bottom: 14px; text-align: center; }
+    .area-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .area-chip {
+      border: 1.5px solid #E8D5F5; border-radius: 10px; padding: 11px 6px;
+      text-align: center; cursor: pointer; font-size: 0.8rem; color: var(--text2);
+      transition: all 0.15s; background: white;
+    }
+    .area-chip.active { border-color: var(--purple); background: var(--purple); color: white; font-weight: 600; }
+    .filter-chip.area-active { border-color: var(--purple); background: #F5EEFF; color: var(--purple); font-weight: 600; }
+
+    /* ══ 전화/예약 버튼 ══ */
+    .contact-bar { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-call {
+      flex: 1; background: #EAFAF1; color: #27AE60; border: 1.5px solid #A9DFBF;
+      border-radius: 10px; padding: 10px; font-family: 'Jua', sans-serif;
+      font-size: 0.88rem; cursor: pointer;
+    }
+    .btn-reserve {
+      flex: 1; background: #EBF5FB; color: #2980B9; border: 1.5px solid #AED6F1;
+      border-radius: 10px; padding: 10px; font-family: 'Jua', sans-serif;
+      font-size: 0.88rem; cursor: pointer;
+    }
+
     /* ══ 다크 모드 보완 (일반 CSS 이후 선언된 요소들) ══ */
     @media (prefers-color-scheme: dark) {
       /* 후기 */
@@ -785,6 +820,13 @@
 
       /* 메뉴 */
       .menu-logout:active { background: #2A1020; }
+      /* 지역 시트 */
+      #area-sheet { background: #1E1E2C; }
+      .area-chip  { background: #2A1828; border-color: #3A2838; color: var(--text2); }
+      .area-chip.active { background: var(--purple); border-color: var(--purple); color: white; }
+      /* 전화/예약 */
+      .btn-call    { background: #1A3020; color: #52D98A; border-color: #2A5038; }
+      .btn-reserve { background: #1A2035; color: #7AB8E8; border-color: #2A3858; }
     }
   </style>
 </head>
@@ -891,6 +933,7 @@
   <div class="filter-chip" data-filter="unknown" onclick="setFilter('unknown')">
     <span class="dot" style="background:var(--unknown)"></span> 정보없음
   </div>
+  <div class="filter-chip" id="area-filter-chip" onclick="openAreaFilter()" style="flex-shrink:0">📍 지역</div>
 </div>
 
 <!-- ════ 지도 ════ -->
@@ -952,6 +995,11 @@
       <span class="info-value" id="sh-memo" style="font-size:0.85rem;color:var(--text2)">-</span>
     </div>
     <div class="sheet-meta" id="sh-meta"></div>
+    <div class="contact-bar hidden" id="sh-contact-bar">
+      <button class="btn-call"    id="sh-call-btn"    onclick="callPhone()">📞 전화하기</button>
+      <button class="btn-reserve" id="sh-reserve-btn" onclick="openReservation()">🔗 예약하기</button>
+    </div>
+
     <div class="action-bar">
       <button class="btn-action vote-up" id="sh-vote-up" onclick="castVote('up')">
         <span class="act-icon">👍</span>
@@ -1067,6 +1115,15 @@
       <textarea id="form-memo" class="form-textarea" placeholder="예: 저녁만 가능, 1병 무료 등..."></textarea>
     </div>
 
+    <div class="form-section">
+      <label class="form-label">📞 전화번호 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
+      <input type="tel" id="form-phone" class="form-input" placeholder="예: 02-1234-5678">
+    </div>
+    <div class="form-section">
+      <label class="form-label">🔗 예약 링크 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
+      <input type="url" id="form-reservation" class="form-input" placeholder="예: https://booking.naver.com/...">
+    </div>
+
     <button class="btn-submit" id="form-submit-btn" onclick="submitForm()">등록하기</button>
   </div>
 </div>
@@ -1087,6 +1144,26 @@
     </div>
     <div style="font-weight:700;font-size:0.88rem;color:var(--text2);margin-bottom:10px">🚨 신고 목록</div>
     <div id="admin-reports"><div class="admin-empty">불러오는 중...</div></div>
+  </div>
+</div>
+
+<!-- ════ 지역 필터 시트 ════ -->
+<div id="area-backdrop" onclick="closeAreaFilter()"></div>
+<div id="area-sheet">
+  <div class="area-sheet-title">📍 지역 선택</div>
+  <div class="area-grid">
+    <div class="area-chip active" data-area="전체"       onclick="selectArea('전체')">전체</div>
+    <div class="area-chip" data-area="강남·서초"         onclick="selectArea('강남·서초')">강남·서초</div>
+    <div class="area-chip" data-area="홍대·마포"         onclick="selectArea('홍대·마포')">홍대·마포</div>
+    <div class="area-chip" data-area="이태원·용산"       onclick="selectArea('이태원·용산')">이태원·용산</div>
+    <div class="area-chip" data-area="종로·중구"         onclick="selectArea('종로·중구')">종로·중구</div>
+    <div class="area-chip" data-area="성수·건대"         onclick="selectArea('성수·건대')">성수·건대</div>
+    <div class="area-chip" data-area="신촌·서대문"       onclick="selectArea('신촌·서대문')">신촌·서대문</div>
+    <div class="area-chip" data-area="여의도·영등포"     onclick="selectArea('여의도·영등포')">여의도·영등포</div>
+    <div class="area-chip" data-area="송파·강동"         onclick="selectArea('송파·강동')">송파·강동</div>
+    <div class="area-chip" data-area="강북"              onclick="selectArea('강북')">강북</div>
+    <div class="area-chip" data-area="관악·동작"         onclick="selectArea('관악·동작')">관악·동작</div>
+    <div class="area-chip" data-area="기타"              onclick="selectArea('기타')">기타</div>
   </div>
 </div>
 
@@ -1169,6 +1246,18 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const ALCOHOL_LABELS = { wine:'와인', baijiu:'고량주(백주)', japanese:'일본주', hanju:'한주', whiskey:'위스키', all:'전체' };
+const AREA_DISTRICTS = {
+  '강남·서초':   ['강남구','서초구'],
+  '홍대·마포':   ['마포구'],
+  '이태원·용산': ['용산구'],
+  '종로·중구':   ['종로구','중구'],
+  '성수·건대':   ['성동구','광진구'],
+  '신촌·서대문': ['서대문구'],
+  '여의도·영등포':['영등포구','양천구'],
+  '송파·강동':   ['송파구','강동구'],
+  '강북':        ['성북구','강북구','도봉구','노원구'],
+  '관악·동작':   ['관악구','동작구'],
+};
 const STATUS_LABELS  = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보 없음' };
 const GLASS_LABELS   = { 'true':'있음', 'false':'없음', 'null':'모름' };
 
@@ -1184,6 +1273,7 @@ let currentFavorite = false;
 let currentView = 'map';
 let sortBy = 'default';
 let userLocation = null;
+let activeArea = '전체';
 let reviewVoteChoice = '';
 let reviewPhotos = [];
 
@@ -1311,7 +1401,9 @@ async function loadPlaces() {
 function renderMarkers() {
   markerCluster.clearLayers();
   markers = {};
-  const filtered = activeFilter === 'all' ? allDocs : allDocs.filter(d => d.corkageStatus === activeFilter);
+  const filtered = allDocs.filter(d =>
+    (activeFilter === 'all' || d.corkageStatus === activeFilter) && matchesArea(d)
+  );
   filtered.forEach(doc => {
     if (!doc.lat || !doc.lng) return;
     const marker = L.marker([doc.lat, doc.lng], { icon: createMarkerIcon(doc.corkageStatus || 'unknown', doc.name) });
@@ -1383,6 +1475,16 @@ function openSheet(docId) {
   const name = doc.addedBy?.name || '익명';
   const date = doc.addedAt?.toDate ? doc.addedAt.toDate().toLocaleDateString('ko-KR') : '';
   document.getElementById('sh-meta').textContent = `${name} 등록${date ? ' · ' + date : ''}`;
+
+  // 전화/예약 버튼
+  const contactBar = document.getElementById('sh-contact-bar');
+  const callBtn    = document.getElementById('sh-call-btn');
+  const reserveBtn = document.getElementById('sh-reserve-btn');
+  const hasPhone   = !!(doc.phone && doc.phone.trim());
+  const hasReserve = !!(doc.reservationUrl && doc.reservationUrl.trim());
+  callBtn.classList.toggle('hidden', !hasPhone);
+  reserveBtn.classList.toggle('hidden', !hasReserve);
+  contactBar.classList.toggle('hidden', !hasPhone && !hasReserve);
 
   // 즐겨찾기 상태 초기화 후 로드
   currentFavorite = false;
@@ -1551,6 +1653,8 @@ function resetForm() {
   document.querySelectorAll('.glass-opt').forEach(el => el.classList.remove('active'));
   document.getElementById('form-fee').value = '';
   document.getElementById('form-memo').value = '';
+  document.getElementById('form-phone').value = '';
+  document.getElementById('form-reservation').value = '';
   document.getElementById('fee-section').classList.add('hidden');
 }
 
@@ -1584,7 +1688,9 @@ async function openFormForEdit() {
   if (doc.corkageFee) document.getElementById('form-fee').value = doc.corkageFee;
   if (doc.alcoholTypes) doc.alcoholTypes.forEach(a => toggleAlcohol(a));
   if (doc.glassProvided !== undefined && doc.glassProvided !== null) selectGlass(String(doc.glassProvided));
-  if (doc.memo) document.getElementById('form-memo').value = doc.memo;
+  if (doc.memo)           document.getElementById('form-memo').value = doc.memo;
+  if (doc.phone)          document.getElementById('form-phone').value = doc.phone;
+  if (doc.reservationUrl) document.getElementById('form-reservation').value = doc.reservationUrl;
 
   closeSheet();
   currentDocId = savedId; // closeSheet()로 null이 된 ID를 복원
@@ -1631,7 +1737,9 @@ async function submitForm() {
     corkageFee:    fee,
     alcoholTypes:  [...formAlcohol],
     glassProvided: glassVal,
-    memo:          document.getElementById('form-memo').value.trim(),
+    memo:           document.getElementById('form-memo').value.trim(),
+    phone:          document.getElementById('form-phone').value.trim(),
+    reservationUrl: document.getElementById('form-reservation').value.trim(),
   };
 
   // edit 모드 시 currentDocId 최종 확인
@@ -1812,6 +1920,57 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.remove(), 2800);
 }
 
+/* ════ 지역 필터 ════ */
+function matchesArea(doc) {
+  if (activeArea === '전체') return true;
+  const addr = doc.address || '';
+  if (activeArea === '기타') {
+    return !Object.values(AREA_DISTRICTS).flat().some(d => addr.includes(d));
+  }
+  return AREA_DISTRICTS[activeArea]?.some(d => addr.includes(d)) || false;
+}
+
+function openAreaFilter() {
+  document.getElementById('area-backdrop').classList.add('open');
+  document.getElementById('area-sheet').classList.add('open');
+}
+
+function closeAreaFilter() {
+  document.getElementById('area-backdrop').classList.remove('open');
+  document.getElementById('area-sheet').classList.remove('open');
+}
+
+function selectArea(area) {
+  activeArea = area;
+  document.querySelectorAll('.area-chip').forEach(el =>
+    el.classList.toggle('active', el.dataset.area === area)
+  );
+  const chip = document.getElementById('area-filter-chip');
+  if (area === '전체') {
+    chip.textContent = '📍 지역';
+    chip.classList.remove('area-active');
+  } else {
+    chip.textContent = `📍 ${area}`;
+    chip.classList.add('area-active');
+  }
+  closeAreaFilter();
+  renderMarkers();
+  if (currentView === 'list') renderListView();
+}
+
+/* ════ 전화 / 예약 ════ */
+function callPhone() {
+  if (!currentDocId) return;
+  const doc = allDocs.find(d => d.id === currentDocId);
+  if (doc?.phone) window.location.href = `tel:${doc.phone.replace(/[^0-9+]/g, '')}`;
+}
+
+function openReservation() {
+  if (!currentDocId) return;
+  const doc = allDocs.find(d => d.id === currentDocId);
+  if (doc?.reservationUrl) window.open(doc.reservationUrl, '_blank');
+}
+
 /* ════ 유틸: 거리/NEW 판별 ════ */
 function getDistance(lat1, lng1, lat2, lng2) {
   const R = 6371, r = Math.PI / 180;
@@ -1856,7 +2015,9 @@ function toggleView() {
 
 function renderListView() {
   const container = document.getElementById('list-view');
-  let filtered = activeFilter === 'all' ? [...allDocs] : allDocs.filter(d => d.corkageStatus === activeFilter);
+  let filtered = allDocs.filter(d =>
+    (activeFilter === 'all' || d.corkageStatus === activeFilter) && matchesArea(d)
+  );
 
   // 거리순 정렬
   if (sortBy === 'distance' && userLocation) {
