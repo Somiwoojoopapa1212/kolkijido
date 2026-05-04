@@ -139,7 +139,12 @@
     .sheet-handle { width: 40px; height: 4px; background: #E0D0F0; border-radius: 2px; margin: 12px auto 0; }
     .sheet-content { padding: 16px 20px 32px; }
     .sheet-name { font-family: 'Jua', sans-serif; font-size: 1.35rem; color: var(--text); margin-bottom: 4px; }
-    .sheet-addr { font-size: 0.82rem; color: var(--text2); margin-bottom: 16px; display: flex; align-items: center; gap: 4px; }
+    .sheet-addr {
+      font-size: 0.82rem; color: var(--text2); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 4px;
+      cursor: pointer; text-decoration: underline dotted;
+    }
+    .sheet-addr:active { opacity: 0.7; }
     .sheet-divider { height: 1px; background: #F0E8FF; margin: 14px 0; }
 
     .info-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
@@ -911,7 +916,7 @@
   <div class="sheet-handle"></div>
   <div class="sheet-content">
     <div class="sheet-name" id="sh-name">-</div>
-    <div class="sheet-addr" id="sh-addr">📍 -</div>
+    <div class="sheet-addr" id="sh-addr" onclick="openNaverMap()">📍 -</div>
     <div class="sheet-divider"></div>
 
     <div class="info-row" id="sh-category-row">
@@ -2006,6 +2011,27 @@ function goToPlace(docId) {
   if (!doc || !doc.lat || !doc.lng) { openSheet(docId); return; }
   map.setView([doc.lat, doc.lng], 16);
   setTimeout(() => openSheet(docId), 350);
+}
+
+/* ════ 네이버 지도 연결 ════ */
+function openNaverMap() {
+  if (!currentDocId) return;
+  const doc = allDocs.find(d => d.id === currentDocId);
+  if (!doc) return;
+
+  const query = encodeURIComponent(doc.name + ' ' + (doc.address || ''));
+  const webUrl = `https://map.naver.com/v5/search/${query}`;
+
+  // 모바일: 네이버 지도 앱 딥링크 시도 후 웹으로 폴백
+  if (/android|iphone|ipad/i.test(navigator.userAgent)) {
+    const appUrl = `nmap://search?query=${encodeURIComponent(doc.name)}&appname=com.kolkijido`;
+    const fallback = setTimeout(() => window.open(webUrl, '_blank'), 1200);
+    window.location.href = appUrl;
+    window.addEventListener('blur', () => clearTimeout(fallback), { once: true });
+  } else {
+    window.open(webUrl, '_blank');
+  }
+  showToast('🗺️ 네이버 지도로 연결합니다');
 }
 
 /* ════ 공유 ════ */
