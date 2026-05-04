@@ -747,6 +747,40 @@
       color: var(--no); cursor: pointer; text-align: left;
     }
     .menu-logout:active { background: #FDF0F0; }
+
+    /* ══ 다크 모드 보완 (일반 CSS 이후 선언된 요소들) ══ */
+    @media (prefers-color-scheme: dark) {
+      /* 후기 */
+      .review-card    { background: #1E1020 !important; border-color: #2A1828 !important; }
+      .review-content { color: #E4E4F0 !important; }
+      .review-footer  { color: #9090A8 !important; }
+      .review-date    { color: #9090A8 !important; }
+      .review-badge.up   { background: #1A3025 !important; color: #52D98A !important; }
+      .review-badge.down { background: #301520 !important; color: #F08080 !important; }
+      .reviews-title  { color: #E4E4F0; }
+      .review-photo-thumb { border-color: #3A2838; }
+
+      /* 후기 작성 오버레이 */
+      .photo-thumb img { border-color: #3A2838; }
+      .btn-add-photo   { background: #2A1828; border-color: #5A3858; color: var(--purple); }
+
+      /* 즐겨찾기 */
+      .fav-item-name  { color: #E4E4F0; }
+      .fav-item-addr  { color: #9090A8; }
+
+      /* 목록 뷰 */
+      .list-card-name { color: #E4E4F0; }
+      .list-card-addr { color: #9090A8; }
+      .list-empty     { color: #9090A8; }
+
+      /* 공지 */
+      .notice-item-title { color: #E4E4F0; }
+      .notice-item-body  { color: #9090A8; }
+      .notice-empty      { color: #9090A8; }
+
+      /* 메뉴 */
+      .menu-logout:active { background: #2A1020; }
+    }
   </style>
 </head>
 <body>
