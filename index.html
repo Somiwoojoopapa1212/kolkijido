@@ -1255,9 +1255,43 @@ function openSheet(docId) {
 }
 
 function closeSheet() {
-  document.getElementById('bottom-sheet').classList.remove('open');
+  const sheet = document.getElementById('bottom-sheet');
+  sheet.style.transform = '';
+  sheet.classList.remove('open');
   currentDocId = null;
 }
+
+/* ════ 바텀 시트 스와이프 닫기 ════ */
+(function() {
+  const sheet = document.getElementById('bottom-sheet');
+  let startY = 0, startScroll = 0, dragging = false;
+
+  sheet.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+    startScroll = sheet.scrollTop;
+    dragging = false;
+  }, { passive: true });
+
+  sheet.addEventListener('touchmove', e => {
+    const dy = e.touches[0].clientY - startY;
+    if (startScroll > 0 || dy <= 0) return; // 내부 스크롤 중이면 무시
+    dragging = true;
+    sheet.style.transition = 'none';
+    sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
+  }, { passive: true });
+
+  sheet.addEventListener('touchend', e => {
+    if (!dragging) return;
+    const dy = e.changedTouches[0].clientY - startY;
+    sheet.style.transition = '';
+    if (dy > 80) {
+      closeSheet();
+    } else {
+      sheet.style.transform = '';
+    }
+    dragging = false;
+  });
+})();
 
 const KAKAO_REST_KEY = '993c5a992861be3eea43cb5ee7f68376';
 const ADMIN_EMAIL    = 'shuttle1207@gmail.com';
