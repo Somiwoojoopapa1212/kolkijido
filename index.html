@@ -1037,7 +1037,7 @@
 <button id="locate-btn" class="hidden" onclick="locateMe()" title="내 위치로 이동">📍</button>
 
 <!-- ════ FAB ════ -->
-<button id="fab" class="hidden" onclick="openFormForAdd()">+</button>
+<button id="fab" class="hidden" onclick="openAddFlow()">+</button>
 
 <!-- ════ 바텀 시트 (상세) ════ -->
 <div id="bottom-sheet">
@@ -1123,7 +1123,7 @@
   <div class="search-overlay-header">
     <div class="search-input-wrap">
       <span class="search-icon-abs">🔍</span>
-      <input type="text" id="search-input" class="search-input" placeholder="식당 이름 검색..."
+      <input type="text" id="search-input" class="search-input" placeholder="등록된 콜키지 식당 검색..."
         oninput="onSearchInput(this.value)" autocomplete="off">
     </div>
     <button class="btn-cancel" onclick="closeSearch()">취소</button>
@@ -1436,6 +1436,7 @@ let sortBy = 'default';
 let userLocation = null;
 let activeArea = '전체';
 let peekDocId = null;
+let searchMode = 'find'; // 'find' | 'add'
 let reviewVoteChoice = '';
 let reviewPhotos = [];
 
@@ -1522,7 +1523,7 @@ function initMap() {
     zoomToBoundsOnClick: true,
   });
   map.addLayer(markerCluster);
-  map.on('click', () => { closeSheet(); closePeek(); });
+  map.on('click', () => { closeSheet(); });
 }
 
 function createMarkerIcon(status, name) {
@@ -1569,7 +1570,7 @@ function renderMarkers() {
   filtered.forEach(doc => {
     if (!doc.lat || !doc.lng) return;
     const marker = L.marker([doc.lat, doc.lng], { icon: createMarkerIcon(doc.corkageStatus || 'unknown', doc.name) });
-    marker.on('click', (e) => { L.DomEvent.stopPropagation(e); closeSheet(); openPeek(doc.id); });
+    marker.on('click', (e) => { L.DomEvent.stopPropagation(e); openSheet(doc.id); });
     markerCluster.addLayer(marker);
     markers[doc.id] = marker;
   });
@@ -1735,23 +1736,88 @@ const ADMIN_EMAIL    = 'shuttle1207@gmail.com';
 let searchTimer = null;
 
 function openSearch() {
+  searchMode = 'find';
+  const input = document.getElementById('search-input');
+  input.placeholder = '등록된 콜키지 식당 검색...';
+  input.value = '';
+  document.getElementById('search-results').innerHTML = '<div class="search-empty">식당 이름 또는 주소를 입력해주세요</div>';
   document.getElementById('search-overlay').classList.add('open');
-  setTimeout(() => document.getElementById('search-input').focus(), 300);
+  setTimeout(() => input.focus(), 300);
+}
+
+function openAddSearch() {
+  searchMode = 'add';
+  const input = document.getElementById('search-input');
+  input.placeholder = '새로 등록할 식당 이름 검색...';
+  input.value = '';
+  document.getElementById('search-results').innerHTML = '<div class="search-empty">등록할 식당 이름을 입력해주세요</div>';
+  document.getElementById('search-overlay').classList.add('open');
+  setTimeout(() => input.focus(), 300);
+}
+
+function openAddFlow() {
+  selectedPlace = null;
+  openAddSearch();
 }
 
 function closeSearch() {
   document.getElementById('search-overlay').classList.remove('open');
   document.getElementById('search-input').value = '';
-  document.getElementById('search-results').innerHTML = '<div class="search-empty">식당 이름을 입력해주세요</div>';
+  document.getElementById('search-results').innerHTML = '';
 }
 
 function onSearchInput(val) {
   clearTimeout(searchTimer);
   if (!val.trim()) {
-    document.getElementById('search-results').innerHTML = '<div class="search-empty">식당 이름을 입력해주세요</div>';
+    const msg = searchMode === 'find'
+      ? '식당 이름 또는 주소를 입력해주세요'
+      : '등록할 식당 이름을 입력해주세요';
+    document.getElementById('search-results').innerHTML = `<div class="search-empty">${msg}</div>`;
     return;
   }
-  searchTimer = setTimeout(() => doSearch(val.trim()), 500);
+  if (searchMode === 'find') {
+    searchTimer = setTimeout(() => searchRegisteredPlaces(val.trim()), 200);
+  } else {
+    searchTimer = setTimeout(() => doSearch(val.trim()), 500);
+  }
+}
+
+function searchRegisteredPlaces(query) {
+  const q = query.toLowerCase();
+  const results = allDocs.filter(d =>
+    d.name?.toLowerCase().includes(q) || d.address?.toLowerCase().includes(q)
+  ).slice(0, 25);
+
+  const resultsEl = document.getElementById('search-results');
+  if (!results.length) {
+    resultsEl.innerHTML = `
+      <div class="search-empty">등록된 식당이 없습니다.<br>
+        <small style="color:var(--purple);margin-top:6px;display:block;cursor:pointer"
+          onclick="openAddFlow()">+ 새 식당으로 등록하기</small>
+      </div>`;
+    return;
+  }
+
+  const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보없음' };
+  resultsEl.innerHTML = results.map(doc => `
+    <div class="search-item" onclick="selectRegisteredPlace('${doc.id}')">
+      <div class="search-item-name">${doc.name}</div>
+      <div class="search-item-addr">${doc.address || ''}</div>
+      <div class="search-item-cat">
+        <span class="status-badge ${doc.corkageStatus || 'unknown'}"
+          style="font-size:0.72rem;padding:2px 8px">
+          ${statusLabel[doc.corkageStatus] || '정보없음'}
+        </span>
+      </div>
+    </div>`).join('');
+}
+
+function selectRegisteredPlace(docId) {
+  closeSearch();
+  const doc = allDocs.find(d => d.id === docId);
+  if (!doc) return;
+  if (doc.lat && doc.lng) map.setView([doc.lat, doc.lng], 16);
+  setTimeout(() => openSheet(docId), 350);
 }
 
 async function doSearch(query) {
@@ -1843,7 +1909,7 @@ function resetForm() {
 }
 
 function openFormForAdd() {
-  if (!selectedPlace) { openSearch(); return; }
+  if (!selectedPlace) { openAddSearch(); return; }
   formMode = 'add';
   resetForm();
   document.getElementById('form-title').textContent = '식당 추가';
