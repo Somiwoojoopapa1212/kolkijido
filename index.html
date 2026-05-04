@@ -1637,7 +1637,7 @@ async function resetPassword() {
   showLoading();
   try {
     await auth.sendPasswordResetEmail(email);
-    showLoginError('✅ 비밀번호 재설정 메일을 보냈습니다.');
+    showLoginError('✅ 메일을 확인해 주세요! 받은편지함(또는 스팸함)에서 링크를 눌러 비밀번호를 재설정하세요.');
   } catch(e) {
     showLoginError('메일 발송 실패: ' + e.message);
   }
