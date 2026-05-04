@@ -7,8 +7,8 @@
   "scope": "/kolkijido/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FAF7FF",
-  "theme_color": "#6C3483",
+  "background_color": "#2D0E28",
+  "theme_color": "#521848",
   "lang": "ko",
   "icons": [
     { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },

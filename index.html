@@ -15,12 +15,12 @@
   <meta name="apple-mobile-web-app-title" content="콜키지도">
   <style>
     :root {
-      --purple:   #6C3483;
-      --purple2:  #9B59B6;
-      --purple3:  #D2B4DE;
-      --bg:       #FAF7FF;
+      --purple:   #521848;
+      --purple2:  #8B3A7B;
+      --purple3:  #D4A8CA;
+      --bg:       #FDF7FB;
       --white:    #FFFFFF;
-      --shadow:   rgba(108,52,131,0.14);
+      --shadow:   rgba(82,24,72,0.14);
       --free:     #27AE60;
       --paid:     #E67E22;
       --no:       #E74C3C;
@@ -33,10 +33,11 @@
 
     /* ══ 로그인 화면 ══ */
     #login-screen {
-      position: fixed; inset: 0; background: linear-gradient(160deg, #4A235A 0%, #1A0828 100%);
+      position: fixed; inset: 0; background: linear-gradient(160deg, #521848 0%, #2D0E28 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
     }
-    .login-logo { font-size: 5rem; margin-bottom: 12px; }
+    .login-logo { margin-bottom: 12px; }
+    .login-logo img { width: 88px; height: 88px; border-radius: 22px; box-shadow: 0 8px 28px rgba(0,0,0,0.35); }
     .login-title { font-family: 'Jua', sans-serif; font-size: 2.4rem; color: white; margin-bottom: 8px; }
     .login-sub { font-size: 0.95rem; color: rgba(255,255,255,0.65); margin-bottom: 48px; }
     .btn-google {
@@ -414,12 +415,20 @@
     /* ══ 스플래시(초기 로딩) 화면 ══ */
     #splash-screen {
       position: fixed; inset: 0; z-index: 99999;
-      background: linear-gradient(160deg, #4A235A 0%, #1A0828 100%);
+      background: linear-gradient(160deg, #521848 0%, #2D0E28 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 20px; transition: opacity 0.4s;
     }
     #splash-screen.fade-out { opacity: 0; pointer-events: none; }
-    .splash-logo  { font-size: 5rem; }
+    .splash-icon {
+      width: 100px; height: 100px; border-radius: 24px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      animation: splashPop 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes splashPop {
+      from { transform: scale(0.5); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
     .splash-title { font-family: 'Jua', sans-serif; font-size: 2.2rem; color: white; }
     .splash-spinner {
       width: 36px; height: 36px;
@@ -432,7 +441,7 @@
 
     /* ══ 카카오 인앱 브라우저 안내 화면 ══ */
     #kakao-notice {
-      position: fixed; inset: 0; background: linear-gradient(160deg, #4A235A 0%, #1A0828 100%);
+      position: fixed; inset: 0; background: linear-gradient(160deg, #521848 0%, #2D0E28 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 9999; padding: 32px 24px; text-align: center;
     }
@@ -561,15 +570,15 @@
         --shadow: rgba(0,0,0,0.5);
       }
       #login-screen, #splash-screen, #kakao-notice {
-        background: linear-gradient(160deg, #3A1548 0%, #0E0518 100%);
+        background: linear-gradient(160deg, #521848 0%, #1A0518 100%);
       }
-      #header { background: #3D1A50; }
+      #header { background: #3D1030; }
       #filter-bar { background: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-      .filter-chip { background: var(--white); border-color: #333355; color: var(--text2); }
+      .filter-chip { background: var(--white); border-color: #332233; color: var(--text2); }
       .filter-chip.active { background: var(--purple); color: white; border-color: var(--purple); }
       #bottom-sheet, .form-place-card { background: var(--white); }
-      #menu-panel { background: #1A1A28; }
-      .menu-user { background: linear-gradient(135deg, #3D1A50, #5A2A6A); }
+      #menu-panel { background: #1A0E18; }
+      .menu-user { background: linear-gradient(135deg, #521848, #7B2E68); }
       .sheet-divider, .menu-divider { background: #2A2A3C; }
       .review-card { background: #1A1A28; border-color: #2A2A3C; }
       .fav-item, .list-card, .report-card { background: #1E1E2C; }
@@ -705,14 +714,14 @@
 
 <!-- ════ 스플래시(초기 로딩) ════ -->
 <div id="splash-screen">
-  <div class="splash-logo">🍷</div>
+  <img src="icons/icon-192.png" class="splash-icon" alt="콜키지도">
   <div class="splash-title">콜키지도</div>
   <div class="splash-spinner"></div>
 </div>
 
 <!-- ════ 카카오 인앱 브라우저 안내 ════ -->
 <div id="kakao-notice" class="hidden">
-  <div class="kakao-logo">🍷</div>
+  <div class="kakao-logo"><img src="icons/icon-192.png" alt="콜키지도" style="width:72px;height:72px;border-radius:18px;box-shadow:0 6px 20px rgba(0,0,0,0.3)"></div>
   <div class="kakao-title">콜키지도</div>
   <div class="kakao-box">
     <p>
@@ -731,7 +740,7 @@
 
 <!-- ════ 로그인 화면 ════ -->
 <div id="login-screen">
-  <div class="login-logo">🍷</div>
+  <div class="login-logo"><img src="icons/icon-192.png" alt="콜키지도"></div>
   <div class="login-title">콜키지도</div>
   <div class="login-sub">서울 콜키지 가능 식당 지도</div>
   <button class="btn-google" onclick="signInGoogle()">
