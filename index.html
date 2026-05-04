@@ -294,6 +294,12 @@
     .search-item-addr { font-size: 0.78rem; color: var(--text2); margin-top: 3px; }
     .search-item-cat  { font-size: 0.72rem; color: var(--purple2); margin-top: 2px; }
     .search-empty { text-align: center; padding: 48px 20px; color: var(--text2); font-size: 0.9rem; }
+    .registered-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      background: #EAFAF1; color: #27AE60; border: 1px solid #A9DFBF;
+      border-radius: 10px; padding: 2px 8px; font-size: 0.72rem; font-weight: 600;
+      margin-top: 5px;
+    }
 
     /* ══ 폼 오버레이 (추가/수정) ══ */
     #form-overlay {
@@ -1835,12 +1841,17 @@ async function doSearch(query) {
     const places = data.documents || [];
     if (places.length) {
       window._searchResults = { type: 'kakao', data: places };
-      resultsEl.innerHTML = places.map((r, i) => `
-        <div class="search-item" onclick="selectFromSearch(${i})">
+      resultsEl.innerHTML = places.map((r, i) => {
+        const existing = allDocs.find(d => d.kakaoId === r.id);
+        const badge = existing
+          ? `<span class="registered-badge">✅ 이미 등록됨</span>` : '';
+        return `<div class="search-item" onclick="selectFromSearch(${i})">
           <div class="search-item-name">${r.place_name}</div>
           <div class="search-item-addr">${r.road_address_name || r.address_name}</div>
           <div class="search-item-cat">${r.category_name}</div>
-        </div>`).join('');
+          ${badge}
+        </div>`;
+      }).join('');
       return;
     }
     resultsEl.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
@@ -1870,6 +1881,17 @@ function selectFromSearch(idx) {
   const { type, data } = window._searchResults;
   const r = data[idx];
   if (type === 'kakao') {
+    // 이미 등록된 식당이면 바로 이동
+    const existing = allDocs.find(d => d.kakaoId === r.id);
+    if (existing) {
+      closeSearch();
+      if (existing.lat && existing.lng) map.setView([existing.lat, existing.lng], 16);
+      setTimeout(() => {
+        openSheet(existing.id);
+        showToast('✅ 이미 등록된 식당입니다. 정보를 확인해보세요!');
+      }, 350);
+      return;
+    }
     selectedPlace = {
       name: r.place_name,
       address: r.road_address_name || r.address_name,
