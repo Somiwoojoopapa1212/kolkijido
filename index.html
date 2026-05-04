@@ -789,6 +789,41 @@
     /* ══ 지역 그리드 (area-sheet는 .filter-sheet 공통 스타일 사용) ══ */
     .area-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
+    /* ══ PWA 설치 배너 ══ */
+    #install-banner {
+      position: fixed; bottom: 84px; left: 16px; right: 16px; z-index: 9000;
+      background: white; border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(82,24,72,0.18);
+      padding: 14px 16px; animation: slideUp 0.3s ease;
+    }
+    .install-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .install-icon { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; }
+    .install-text { flex: 1; min-width: 0; }
+    .install-text strong { display: block; font-size: 0.92rem; color: var(--text); }
+    .install-text small  { font-size: 0.78rem; color: var(--text2); }
+    .install-btn {
+      background: var(--purple); color: white; border: none; border-radius: 10px;
+      padding: 8px 14px; font-family: 'Jua', sans-serif; font-size: 0.85rem; cursor: pointer; flex-shrink: 0;
+    }
+    .install-close {
+      background: none; border: none; color: var(--text2); font-size: 1rem;
+      cursor: pointer; padding: 4px; flex-shrink: 0;
+    }
+    .install-ios-tip {
+      margin-top: 10px; padding-top: 10px; border-top: 1px solid #F0E8FF;
+      font-size: 0.8rem; color: var(--text2); text-align: center; line-height: 1.6;
+    }
+
+    /* ══ 내가 등록한 식당 오버레이 ══ */
+    #myplaces-overlay {
+      position: fixed; inset: 0; z-index: 2300;
+      background: var(--bg); display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #myplaces-overlay.open { transform: translateY(0); }
+
     /* ══ 전화/예약 버튼 ══ */
     .contact-bar { display: flex; gap: 8px; margin-top: 10px; }
     .btn-call {
@@ -834,6 +869,9 @@
 
       /* 메뉴 */
       .menu-logout:active { background: #2A1020; }
+      /* PWA 배너 */
+      #install-banner { background: #1E1E2C; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
+      .install-ios-tip { border-top-color: #2A1828; }
       /* 필터 버튼 */
       .filter-btn { background: #1E1E2C; border-color: #3A2838; color: var(--text); }
       .filter-btn.active { background: var(--purple); border-color: var(--purple); color: white; }
@@ -937,6 +975,8 @@
   </div>
   <div class="menu-footer">
     <button class="menu-fav-btn" onclick="openFavorites(); closeMenu()">⭐ 즐겨찾기</button>
+    <div style="height:1px;background:#F0E8FF"></div>
+    <button class="menu-fav-btn" onclick="openMyPlaces(); closeMenu()">🏠 내가 등록한 식당</button>
     <div style="height:1px;background:#F0E8FF"></div>
     <button class="menu-logout" onclick="signOut()">🚪 로그아웃</button>
   </div>
@@ -1264,6 +1304,33 @@
     </div>
 
     <button class="btn-submit" onclick="submitReview()">후기 등록</button>
+  </div>
+</div>
+
+<!-- ════ PWA 설치 유도 배너 ════ -->
+<div id="install-banner" class="hidden">
+  <div class="install-row">
+    <img src="icons/icon-192.png" class="install-icon" alt="콜키지도">
+    <div class="install-text">
+      <strong>콜키지도</strong>
+      <small>홈 화면에 추가하면 앱처럼 사용할 수 있어요!</small>
+    </div>
+    <button class="install-btn" id="install-btn" onclick="triggerInstall()">설치</button>
+    <button class="install-close" onclick="dismissInstall()">✕</button>
+  </div>
+  <div class="install-ios-tip hidden" id="ios-install-tip">
+    📱 Safari 하단 <b>공유 버튼(□↑)</b> 탭 → <b>홈 화면에 추가</b> 선택
+  </div>
+</div>
+
+<!-- ════ 내가 등록한 식당 ════ -->
+<div id="myplaces-overlay">
+  <div class="form-header">
+    <button class="form-back" onclick="closeMyPlaces()">←</button>
+    <h2>🏠 내가 등록한 식당</h2>
+  </div>
+  <div id="myplaces-list" style="flex:1;overflow-y:auto;padding:16px">
+    <div class="admin-empty">불러오는 중...</div>
   </div>
 </div>
 
@@ -2301,6 +2368,94 @@ function checkDeepLink() {
   };
   if (allDocs.length) tryOpen();
   else setTimeout(tryOpen, 2000);
+}
+
+/* ════ PWA 설치 유도 ════ */
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  if (!localStorage.getItem('installDismissed')) {
+    setTimeout(showInstallBanner, 8000);
+  }
+});
+
+function showInstallBanner() {
+  if (localStorage.getItem('installDismissed')) return;
+  document.getElementById('install-banner').classList.remove('hidden');
+}
+
+function triggerInstall() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(r => {
+      if (r.outcome === 'accepted') dismissInstall();
+    });
+  }
+}
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.add('hidden');
+  localStorage.setItem('installDismissed', '1');
+}
+
+// iOS 감지 (Safari에서 수동 설치 안내)
+(function() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isIOS && !isStandalone && !localStorage.getItem('installDismissed')) {
+    setTimeout(() => {
+      document.getElementById('install-banner').classList.remove('hidden');
+      document.getElementById('ios-install-tip').classList.remove('hidden');
+      document.getElementById('install-btn').classList.add('hidden');
+    }, 8000);
+  }
+})();
+
+/* ════ 내가 등록한 식당 ════ */
+function openMyPlaces() {
+  document.getElementById('myplaces-overlay').classList.add('open');
+  loadMyPlaces();
+}
+
+function closeMyPlaces() {
+  document.getElementById('myplaces-overlay').classList.remove('open');
+}
+
+async function loadMyPlaces() {
+  const container = document.getElementById('myplaces-list');
+  container.innerHTML = '<div class="admin-empty">불러오는 중...</div>';
+  try {
+    const snap = await db.collection('corkage')
+      .where('addedBy.uid', '==', currentUser.uid)
+      .get();
+
+    if (!snap.docs.length) {
+      container.innerHTML = '<div class="admin-empty">아직 등록한 식당이 없어요.<br>+ 버튼으로 첫 식당을 등록해보세요!</div>';
+      return;
+    }
+
+    const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    docs.sort((a, b) => (b.addedAt?.seconds || 0) - (a.addedAt?.seconds || 0));
+
+    const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보없음' };
+    container.innerHTML = docs.map(doc => {
+      const date = doc.addedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '';
+      return `<div class="fav-item" onclick="goToPlace('${doc.id}'); closeMyPlaces()">
+        <div class="fav-item-info">
+          <div class="fav-item-name">${doc.name}${isNew(doc) ? '<span class="new-badge">NEW</span>' : ''}</div>
+          <div class="fav-item-addr">${doc.address || ''}</div>
+          ${date ? `<div style="font-size:0.72rem;color:var(--text2);margin-top:3px">📅 ${date} 등록</div>` : ''}
+        </div>
+        <span class="status-badge ${doc.corkageStatus || 'unknown'}" style="flex-shrink:0;font-size:0.74rem;white-space:nowrap">
+          ${statusLabel[doc.corkageStatus] || '정보없음'}
+        </span>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div class="admin-empty">불러오기 실패: ${e.message}</div>`;
+  }
 }
 
 /* ════ 메뉴 드로어 ════ */
