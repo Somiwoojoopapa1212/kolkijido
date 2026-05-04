@@ -1413,6 +1413,23 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const ALCOHOL_LABELS = { wine:'와인', baijiu:'고량주(백주)', japanese:'일본주', hanju:'한주', whiskey:'위스키', all:'전체' };
+const AREA_NICKNAMES = {
+  '홍대':'마포구', '합정':'마포구', '상수':'마포구', '망원':'마포구', '연남':'마포구',
+  '이태원':'용산구', '한남':'용산구', '경리단':'용산구', '녹사평':'용산구',
+  '강남':'강남구', '압구정':'강남구', '청담':'강남구', '역삼':'강남구', '논현':'강남구', '신사':'강남구', '가로수길':'강남구',
+  '서초':'서초구', '방배':'서초구', '반포':'서초구',
+  '성수':'성동구', '뚝섬':'성동구', '왕십리':'성동구',
+  '건대':'광진구', '구의':'광진구',
+  '광화문':'종로구', '인사동':'종로구', '삼청':'종로구', '북촌':'종로구',
+  '을지로':'중구', '명동':'중구', '충무로':'중구',
+  '신촌':'서대문구', '연희':'서대문구',
+  '여의도':'영등포구', '영등포':'영등포구',
+  '잠실':'송파구', '석촌':'송파구', '방이':'송파구',
+  '강동':'강동구', '천호':'강동구',
+  '노원':'노원구', '쌍문':'도봉구', '수유':'강북구', '미아':'강북구',
+  '관악':'관악구', '신림':'관악구', '사당':'동작구', '이수':'동작구',
+};
+
 const AREA_DISTRICTS = {
   '강남·서초':   ['강남구','서초구'],
   '홍대·마포':   ['마포구'],
@@ -1789,10 +1806,18 @@ function onSearchInput(val) {
 }
 
 function searchRegisteredPlaces(query) {
-  const q = query.toLowerCase();
-  const results = allDocs.filter(d =>
-    d.name?.toLowerCase().includes(q) || d.address?.toLowerCase().includes(q)
-  ).slice(0, 25);
+  const q = query.toLowerCase().trim();
+
+  // 별칭 → 행정구 매핑 (예: 홍대 → 마포구)
+  const mappedDistrict = Object.entries(AREA_NICKNAMES)
+    .find(([nick]) => nick.includes(q) || q.includes(nick))?.[1]?.toLowerCase();
+
+  const results = allDocs.filter(d => {
+    const name = d.name?.toLowerCase() || '';
+    const addr = d.address?.toLowerCase() || '';
+    return name.includes(q) || addr.includes(q) ||
+      (mappedDistrict && addr.includes(mappedDistrict));
+  }).slice(0, 25);
 
   const resultsEl = document.getElementById('search-results');
   if (!results.length) {
