@@ -1820,12 +1820,19 @@ function searchRegisteredPlaces(query) {
   }).slice(0, 25);
 
   const resultsEl = document.getElementById('search-results');
+  const addBtn = `
+    <div style="padding:14px 16px;border-top:1px solid #F0E8FF">
+      <button onclick="openAddFlow()" style="
+        width:100%; background:var(--purple); color:white; border:none;
+        border-radius:12px; padding:14px; font-family:'Jua',sans-serif;
+        font-size:0.95rem; cursor:pointer; display:flex; align-items:center;
+        justify-content:center; gap:8px;">
+        ➕ 찾는 식당이 없다면? 새로 등록하기
+      </button>
+    </div>`;
+
   if (!results.length) {
-    resultsEl.innerHTML = `
-      <div class="search-empty">등록된 식당이 없습니다.<br>
-        <small style="color:var(--purple);margin-top:6px;display:block;cursor:pointer"
-          onclick="openAddFlow()">+ 새 식당으로 등록하기</small>
-      </div>`;
+    resultsEl.innerHTML = `<div class="search-empty">검색 결과가 없습니다.</div>${addBtn}`;
     return;
   }
 
@@ -1840,7 +1847,7 @@ function searchRegisteredPlaces(query) {
           ${statusLabel[doc.corkageStatus] || '정보없음'}
         </span>
       </div>
-    </div>`).join('');
+    </div>`).join('') + addBtn;
 }
 
 function selectRegisteredPlace(docId) {
