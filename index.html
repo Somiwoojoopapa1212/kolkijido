@@ -364,6 +364,23 @@
     .update-banner .umsg small { display: block; font-size: 0.75rem; opacity: 0.7; margin-top: 2px; }
     .update-banner .ubtn { background: #52B788; border: none; border-radius: 8px; padding: 7px 14px; color: white; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
 
+    /* ══ 스플래시(초기 로딩) 화면 ══ */
+    #splash-screen {
+      position: fixed; inset: 0; z-index: 99999;
+      background: linear-gradient(160deg, #4A235A 0%, #1A0828 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 20px; transition: opacity 0.4s;
+    }
+    #splash-screen.fade-out { opacity: 0; pointer-events: none; }
+    .splash-logo  { font-size: 5rem; }
+    .splash-title { font-family: 'Jua', sans-serif; font-size: 2.2rem; color: white; }
+    .splash-spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
     .hidden { display: none !important; }
 
     /* ══ 카카오 인앱 브라우저 안내 화면 ══ */
@@ -559,6 +576,13 @@
   </style>
 </head>
 <body>
+
+<!-- ════ 스플래시(초기 로딩) ════ -->
+<div id="splash-screen">
+  <div class="splash-logo">🍷</div>
+  <div class="splash-title">콜키지도</div>
+  <div class="splash-spinner"></div>
+</div>
 
 <!-- ════ 카카오 인앱 브라우저 안내 ════ -->
 <div id="kakao-notice" class="hidden">
@@ -926,9 +950,15 @@ let formGlass     = '';
 
 /* ════ 인증 ════ */
 auth.onAuthStateChanged(user => {
+  const splash = document.getElementById('splash-screen');
+  const hideSplash = () => {
+    splash.classList.add('fade-out');
+    setTimeout(() => splash.classList.add('hidden'), 420);
+  };
   if (user) {
     currentUser = user;
     showApp();
+    hideSplash();
   } else {
     currentUser = null;
     if (isKakaoBrowser()) {
@@ -937,6 +967,7 @@ auth.onAuthStateChanged(user => {
       document.getElementById('login-screen').style.display = 'flex';
     }
     ['header','filter-bar','map','fab','locate-btn'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    hideSplash();
   }
 });
 
@@ -969,14 +1000,6 @@ function showApp() {
   // 관리자 버튼 표시
   if (currentUser.email === ADMIN_EMAIL) {
     document.getElementById('admin-btn').classList.remove('hidden');
-  }
-
-  // 아바타
-  const avatarEl = document.getElementById('user-avatar');
-  if (currentUser.photoURL) {
-    avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
-  } else {
-    document.getElementById('avatar-initial').textContent = (currentUser.displayName||'U')[0];
   }
 
   updateMenuUser();
