@@ -979,13 +979,16 @@ auth.onAuthStateChanged(user => {
 });
 
 async function signInGoogle() {
+  if (isKakaoBrowser()) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('kakao-notice').classList.remove('hidden');
+    return;
+  }
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    // 팝업 우선 시도
     await auth.signInWithPopup(provider);
   } catch(e) {
     if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
-      // 팝업 차단 시 리다이렉트 방식으로 폴백 (카카오/인앱 브라우저)
       auth.signInWithRedirect(provider);
     } else {
       alert('로그인 실패: ' + e.message);
