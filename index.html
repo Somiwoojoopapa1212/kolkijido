@@ -82,14 +82,47 @@
       scrollbar-width: none;
     }
     #filter-bar::-webkit-scrollbar { display: none; }
-    .filter-chip {
-      display: flex; align-items: center; gap: 5px; white-space: nowrap;
-      border: 2px solid #E8E0F0; border-radius: 20px; padding: 6px 14px;
-      font-size: 0.82rem; cursor: pointer; background: white; color: var(--text2);
-      transition: all 0.15s; flex-shrink: 0;
+    /* 고급 필터 버튼 */
+    .filter-btn {
+      display: flex; align-items: center; gap: 6px; white-space: nowrap;
+      border: 1.5px solid #E8D5F5; border-radius: 20px; padding: 7px 14px;
+      font-size: 0.83rem; cursor: pointer; background: white; color: var(--text);
+      font-family: 'Noto Sans KR', sans-serif; transition: all 0.15s; flex-shrink: 0;
     }
-    .filter-chip.active { border-color: var(--purple); background: var(--purple); color: white; }
-    .filter-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .filter-btn .f-arrow { font-size: 0.6rem; opacity: 0.6; }
+    .filter-btn.active { border-color: var(--purple); background: var(--purple); color: white; }
+    .filter-btn.active .f-arrow { opacity: 0.8; }
+    /* 필터 시트 공통 */
+    .filter-backdrop {
+      position: fixed; inset: 0; z-index: 1200;
+      background: rgba(0,0,0,0.45); display: none;
+    }
+    .filter-backdrop.open { display: block; }
+    .filter-sheet {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 1201;
+      background: white; border-radius: 22px 22px 0 0; padding: 8px 16px 40px;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    .filter-sheet.open { transform: translateY(0); }
+    .filter-sheet-handle { width: 36px; height: 4px; background: #E0D0F0; border-radius: 2px; margin: 10px auto 16px; }
+    .filter-sheet-title { font-family: 'Jua', sans-serif; font-size: 1rem; color: var(--text); margin-bottom: 14px; }
+    /* 상태 필터 옵션 */
+    .status-option {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 4px; border-bottom: 1px solid #F5EEFF; cursor: pointer;
+    }
+    .status-option:last-child { border-bottom: none; }
+    .status-option .s-icon { font-size: 1.2rem; width: 28px; text-align: center; }
+    .status-option .s-label { flex: 1; font-size: 0.92rem; color: var(--text); }
+    .status-option .s-check { color: var(--purple); font-weight: 700; font-size: 1rem; }
+    /* 지역 그리드 */
+    .area-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .area-chip {
+      border: 1.5px solid #E8D5F5; border-radius: 10px; padding: 11px 6px;
+      text-align: center; cursor: pointer; font-size: 0.8rem; color: var(--text2);
+      transition: all 0.15s; background: white;
+    }
+    .area-chip.active { border-color: var(--purple); background: var(--purple); color: white; font-weight: 600; }
 
     /* ══ 지도 ══ */
     #map { position: fixed; top: 104px; left: 0; right: 0; bottom: 0; z-index: 1; }
@@ -820,8 +853,16 @@
 
       /* 메뉴 */
       .menu-logout:active { background: #2A1020; }
-      /* 지역 시트 */
-      #area-sheet { background: #1E1E2C; }
+      /* 필터 버튼 */
+      .filter-btn { background: #1E1E2C; border-color: #3A2838; color: var(--text); }
+      .filter-btn.active { background: var(--purple); border-color: var(--purple); color: white; }
+      /* 필터 시트 공통 */
+      .filter-sheet { background: #1E1E2C; }
+      .filter-sheet-title { color: var(--text); }
+      /* 상태 옵션 */
+      .status-option { border-bottom-color: #2A1828; }
+      .status-option .s-label { color: var(--text); }
+      /* 지역 칩 */
       .area-chip  { background: #2A1828; border-color: #3A2838; color: var(--text2); }
       .area-chip.active { background: var(--purple); border-color: var(--purple); color: white; }
       /* 전화/예약 */
@@ -920,20 +961,12 @@
 
 <!-- ════ 필터 바 ════ -->
 <div id="filter-bar" class="hidden">
-  <div class="filter-chip active" data-filter="all" onclick="setFilter('all')">전체</div>
-  <div class="filter-chip" data-filter="free" onclick="setFilter('free')">
-    <span class="dot" style="background:var(--free)"></span> 무료
-  </div>
-  <div class="filter-chip" data-filter="paid" onclick="setFilter('paid')">
-    <span class="dot" style="background:var(--paid)"></span> 유료
-  </div>
-  <div class="filter-chip" data-filter="no" onclick="setFilter('no')">
-    <span class="dot" style="background:var(--no)"></span> 불가
-  </div>
-  <div class="filter-chip" data-filter="unknown" onclick="setFilter('unknown')">
-    <span class="dot" style="background:var(--unknown)"></span> 정보없음
-  </div>
-  <div class="filter-chip" id="area-filter-chip" onclick="openAreaFilter()" style="flex-shrink:0">📍 지역</div>
+  <button class="filter-btn" id="status-filter-btn" onclick="openStatusFilter()">
+    🍷 콜키지: 전체 <span class="f-arrow">▾</span>
+  </button>
+  <button class="filter-btn" id="area-filter-btn" onclick="openAreaFilter()">
+    📍 지역: 전체 <span class="f-arrow">▾</span>
+  </button>
 </div>
 
 <!-- ════ 지도 ════ -->
@@ -1147,10 +1180,40 @@
   </div>
 </div>
 
+<!-- ════ 콜키지 상태 필터 시트 ════ -->
+<div class="filter-backdrop" id="status-backdrop" onclick="closeStatusFilter()"></div>
+<div class="filter-sheet" id="status-sheet">
+  <div class="filter-sheet-handle"></div>
+  <div class="filter-sheet-title">🍷 콜키지 상태</div>
+  <div id="status-option-list">
+    <div class="status-option" onclick="applyStatusFilter('all')">
+      <span class="s-icon">🍽️</span><span class="s-label">전체</span>
+      <span class="s-check" id="sc-all">✓</span>
+    </div>
+    <div class="status-option" onclick="applyStatusFilter('free')">
+      <span class="s-icon">✅</span><span class="s-label">무료 콜키지</span>
+      <span class="s-check hidden" id="sc-free">✓</span>
+    </div>
+    <div class="status-option" onclick="applyStatusFilter('paid')">
+      <span class="s-icon">💰</span><span class="s-label">유료 콜키지</span>
+      <span class="s-check hidden" id="sc-paid">✓</span>
+    </div>
+    <div class="status-option" onclick="applyStatusFilter('no')">
+      <span class="s-icon">❌</span><span class="s-label">콜키지 불가</span>
+      <span class="s-check hidden" id="sc-no">✓</span>
+    </div>
+    <div class="status-option" onclick="applyStatusFilter('unknown')">
+      <span class="s-icon">❓</span><span class="s-label">정보 없음</span>
+      <span class="s-check hidden" id="sc-unknown">✓</span>
+    </div>
+  </div>
+</div>
+
 <!-- ════ 지역 필터 시트 ════ -->
-<div id="area-backdrop" onclick="closeAreaFilter()"></div>
-<div id="area-sheet">
-  <div class="area-sheet-title">📍 지역 선택</div>
+<div class="filter-backdrop" id="area-backdrop" onclick="closeAreaFilter()"></div>
+<div class="filter-sheet" id="area-sheet">
+  <div class="filter-sheet-handle"></div>
+  <div class="filter-sheet-title">📍 지역 선택</div>
   <div class="area-grid">
     <div class="area-chip active" data-area="전체"       onclick="selectArea('전체')">전체</div>
     <div class="area-chip" data-area="강남·서초"         onclick="selectArea('강남·서초')">강남·서초</div>
@@ -1416,9 +1479,28 @@ function renderMarkers() {
 /* ════ 필터 ════ */
 function setFilter(f) {
   activeFilter = f;
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
+  const labels = { all:'전체', free:'무료', paid:'유료', no:'불가', unknown:'정보없음' };
+  const btn = document.getElementById('status-filter-btn');
+  btn.innerHTML = `🍷 콜키지: ${labels[f] || '전체'} <span class="f-arrow">▾</span>`;
+  btn.classList.toggle('active', f !== 'all');
   renderMarkers();
   if (currentView === 'list') renderListView();
+}
+
+function openStatusFilter() {
+  document.getElementById('status-backdrop').classList.add('open');
+  document.getElementById('status-sheet').classList.add('open');
+  ['all','free','paid','no','unknown'].forEach(v => {
+    document.getElementById(`sc-${v}`).classList.toggle('hidden', v !== activeFilter);
+  });
+}
+function closeStatusFilter() {
+  document.getElementById('status-backdrop').classList.remove('open');
+  document.getElementById('status-sheet').classList.remove('open');
+}
+function applyStatusFilter(val) {
+  closeStatusFilter();
+  setFilter(val);
 }
 
 /* ════ 바텀 시트 ════ */
@@ -1948,14 +2030,9 @@ function selectArea(area) {
   document.querySelectorAll('.area-chip').forEach(el =>
     el.classList.toggle('active', el.dataset.area === area)
   );
-  const chip = document.getElementById('area-filter-chip');
-  if (area === '전체') {
-    chip.textContent = '📍 지역';
-    chip.classList.remove('area-active');
-  } else {
-    chip.textContent = `📍 ${area}`;
-    chip.classList.add('area-active');
-  }
+  const btn = document.getElementById('area-filter-btn');
+  btn.innerHTML = `📍 지역: ${area} <span class="f-arrow">▾</span>`;
+  btn.classList.toggle('active', area !== '전체');
   closeAreaFilter();
   renderMarkers();
   if (currentView === 'list') renderListView();
