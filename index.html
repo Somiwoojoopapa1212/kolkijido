@@ -494,6 +494,68 @@
       width: 80px; height: 80px; border: 2px dashed #C9B4E0; border-radius: 10px;
       color: var(--purple2); font-size: 0.85rem; cursor: pointer; background: white;
     }
+
+    /* ══ 햄버거 버튼 ══ */
+    .hamburger-btn {
+      position: relative; width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(255,255,255,0.2); border: none; color: white;
+      font-size: 1.15rem; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; transition: background 0.15s;
+    }
+    .hamburger-btn:active { background: rgba(255,255,255,0.35); }
+    .notice-badge {
+      position: absolute; top: -3px; right: -3px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #E74C3C; border: 2px solid var(--purple);
+    }
+
+    /* ══ 메뉴 드로어 ══ */
+    #menu-overlay {
+      position: fixed; inset: 0; z-index: 1500;
+      background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    #menu-overlay.open { opacity: 1; pointer-events: all; }
+    #menu-panel {
+      position: fixed; top: 0; right: 0; bottom: 0; z-index: 1501;
+      width: 280px; max-width: 85vw; background: white;
+      transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; overflow-y: auto;
+    }
+    #menu-panel.open { transform: translateX(0); }
+    .menu-user {
+      background: linear-gradient(135deg, var(--purple), var(--purple2));
+      padding: 52px 20px 20px; color: white;
+    }
+    .menu-avatar-lg {
+      width: 52px; height: 52px; border-radius: 50%;
+      border: 2.5px solid rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; font-weight: 700; color: white;
+      margin-bottom: 10px; overflow: hidden;
+    }
+    .menu-avatar-lg img { width: 100%; height: 100%; object-fit: cover; }
+    .menu-user-name  { font-family: 'Jua', sans-serif; font-size: 1.05rem; margin-bottom: 3px; }
+    .menu-user-email { font-size: 0.78rem; opacity: 0.75; }
+    .menu-section { padding: 16px 0; flex: 1; }
+    .menu-section-title {
+      font-weight: 700; font-size: 0.82rem; color: var(--text2);
+      padding: 0 20px 10px; letter-spacing: 0.02em;
+    }
+    .notice-item { padding: 12px 20px; border-bottom: 1px solid #F5F0FF; }
+    .notice-item-title { font-size: 0.9rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .notice-item-body  { font-size: 0.82rem; color: var(--text2); line-height: 1.55; white-space: pre-wrap; }
+    .notice-item-date  { font-size: 0.72rem; color: var(--purple2); margin-top: 5px; }
+    .notice-empty { padding: 12px 20px; font-size: 0.85rem; color: var(--text2); }
+    .menu-footer { border-top: 1px solid #F0E8FF; }
+    .menu-logout {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 16px 20px; background: none; border: none;
+      font-family: 'Noto Sans KR', sans-serif; font-size: 0.95rem;
+      color: var(--no); cursor: pointer; text-align: left;
+    }
+    .menu-logout:active { background: #FDF0F0; }
   </style>
 </head>
 <body>
@@ -549,8 +611,26 @@
     <span class="search-placeholder">식당 검색...</span>
   </div>
   <button id="admin-btn" class="icon-btn hidden" onclick="openAdmin()" style="background:rgba(231,76,60,0.3)">🛡️</button>
-  <div class="avatar" id="user-avatar" onclick="signOut()">
-    <span id="avatar-initial">?</span>
+  <button class="hamburger-btn" id="hamburger-btn" onclick="openMenu()">
+    ☰
+    <span class="notice-badge hidden" id="notice-badge"></span>
+  </button>
+</div>
+
+<!-- ════ 메뉴 드로어 ════ -->
+<div id="menu-overlay" onclick="closeMenu()"></div>
+<div id="menu-panel">
+  <div class="menu-user">
+    <div class="menu-avatar-lg" id="menu-avatar-lg">?</div>
+    <div class="menu-user-name"  id="menu-user-name">-</div>
+    <div class="menu-user-email" id="menu-user-email">-</div>
+  </div>
+  <div class="menu-section">
+    <div class="menu-section-title">📢 공지사항</div>
+    <div id="menu-notices"><div class="notice-empty">불러오는 중...</div></div>
+  </div>
+  <div class="menu-footer">
+    <button class="menu-logout" onclick="signOut()">🚪 로그아웃</button>
   </div>
 </div>
 
@@ -742,11 +822,18 @@
 <div id="admin-overlay">
   <div class="admin-header">
     <button class="form-back" onclick="closeAdmin()">←</button>
-    <h2>🛡️ 관리자 — 신고 목록</h2>
+    <h2>🛡️ 관리자</h2>
     <button class="icon-btn" onclick="loadReports()" style="background:rgba(255,255,255,0.2);font-size:0.8rem">새로고침</button>
   </div>
-  <div class="admin-body" id="admin-body">
-    <div class="admin-empty">불러오는 중...</div>
+  <div class="admin-body">
+    <div style="background:white;border-radius:14px;padding:14px 16px;margin-bottom:20px;box-shadow:0 2px 10px var(--shadow)">
+      <div style="font-weight:700;font-size:0.88rem;color:var(--text2);margin-bottom:12px">📢 공지 작성</div>
+      <input type="text" id="notice-title-input" class="form-input" placeholder="공지 제목" style="display:block;width:100%;margin-bottom:8px">
+      <textarea id="notice-body-input" class="form-textarea" placeholder="공지 내용..." style="min-height:60px;width:100%"></textarea>
+      <button class="btn-submit" style="padding:11px;margin-top:8px;font-size:0.88rem" onclick="submitNotice()">공지 등록</button>
+    </div>
+    <div style="font-weight:700;font-size:0.88rem;color:var(--text2);margin-bottom:10px">🚨 신고 목록</div>
+    <div id="admin-reports"><div class="admin-empty">불러오는 중...</div></div>
   </div>
 </div>
 
@@ -871,6 +958,7 @@ async function signInGoogle() {
 auth.getRedirectResult().catch(e => console.warn('Redirect result:', e));
 
 function signOut() {
+  closeMenu();
   if (confirm('로그아웃 하시겠어요?')) auth.signOut();
 }
 
@@ -891,6 +979,8 @@ function showApp() {
     document.getElementById('avatar-initial').textContent = (currentUser.displayName||'U')[0];
   }
 
+  updateMenuUser();
+  checkUnreadNotices();
   if (!map) initMap();
   setTimeout(() => map && map.invalidateSize(), 200);
   loadPlaces();
@@ -1329,7 +1419,7 @@ function closeAdmin() {
 }
 
 async function loadReports() {
-  const body = document.getElementById('admin-body');
+  const body = document.getElementById('admin-reports');
   body.innerHTML = '<div class="admin-empty">불러오는 중...</div>';
   try {
     const snap = await db.collection('reports').orderBy('reportedAt', 'desc').limit(50).get();
@@ -1408,6 +1498,89 @@ function showToast(msg) {
   el.className = 'toast'; el.textContent = msg;
   document.body.appendChild(el);
   toastTimer = setTimeout(() => el.remove(), 2800);
+}
+
+/* ════ 메뉴 드로어 ════ */
+function openMenu() {
+  document.getElementById('menu-overlay').classList.add('open');
+  document.getElementById('menu-panel').classList.add('open');
+  loadNotices();
+}
+
+function closeMenu() {
+  document.getElementById('menu-overlay').classList.remove('open');
+  document.getElementById('menu-panel').classList.remove('open');
+}
+
+function updateMenuUser() {
+  if (!currentUser) return;
+  const nameEl  = document.getElementById('menu-user-name');
+  const emailEl = document.getElementById('menu-user-email');
+  const avatarEl = document.getElementById('menu-avatar-lg');
+  nameEl.textContent  = currentUser.displayName || '사용자';
+  emailEl.textContent = currentUser.email || '';
+  if (currentUser.photoURL) {
+    avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
+  } else {
+    avatarEl.textContent = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
+  }
+}
+
+/* ════ 공지사항 ════ */
+async function loadNotices() {
+  const container = document.getElementById('menu-notices');
+  try {
+    const snap = await db.collection('notices').orderBy('createdAt', 'desc').limit(10).get();
+    if (!snap.docs.length) {
+      container.innerHTML = '<div class="notice-empty">등록된 공지가 없습니다.</div>';
+      return;
+    }
+    container.innerHTML = snap.docs.map(d => {
+      const n = d.data();
+      const dateStr = n.createdAt?.toDate?.()?.toLocaleDateString('ko-KR') || '';
+      return `<div class="notice-item">
+        <div class="notice-item-title">${n.title}</div>
+        <div class="notice-item-body">${n.content}</div>
+        <div class="notice-item-date">${dateStr}</div>
+      </div>`;
+    }).join('');
+    // 읽음 처리
+    const newest = String(snap.docs[0].data().createdAt?.seconds || 0);
+    localStorage.setItem('noticeLastRead', newest);
+    document.getElementById('notice-badge').classList.add('hidden');
+  } catch(e) {
+    container.innerHTML = '<div class="notice-empty">공지를 불러오지 못했어요.</div>';
+  }
+}
+
+async function checkUnreadNotices() {
+  try {
+    const snap = await db.collection('notices').orderBy('createdAt', 'desc').limit(1).get();
+    if (!snap.docs.length) return;
+    const lastRead = localStorage.getItem('noticeLastRead') || '0';
+    const newest = String(snap.docs[0].data().createdAt?.seconds || 0);
+    if (newest > lastRead) {
+      document.getElementById('notice-badge').classList.remove('hidden');
+    }
+  } catch(e) {}
+}
+
+async function submitNotice() {
+  const title   = document.getElementById('notice-title-input').value.trim();
+  const content = document.getElementById('notice-body-input').value.trim();
+  if (!title || !content) { showToast('제목과 내용을 입력해주세요.'); return; }
+  showLoading();
+  try {
+    await db.collection('notices').add({
+      title, content,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      createdBy: currentUser.uid,
+    });
+    document.getElementById('notice-title-input').value = '';
+    document.getElementById('notice-body-input').value = '';
+    showToast('✅ 공지가 등록됐습니다!');
+  } catch(e) { showToast('등록 실패: ' + e.message); }
+  hideLoading();
 }
 
 /* ════ 이메일 로그인 ════ */
