@@ -786,27 +786,8 @@
     }
     .menu-logout:active { background: #FDF0F0; }
 
-    /* ══ 지역 필터 시트 ══ */
-    #area-backdrop {
-      position: fixed; inset: 0; z-index: 1200;
-      background: rgba(0,0,0,0.45); display: none;
-    }
-    #area-backdrop.open { display: block; }
-    #area-sheet {
-      position: fixed; left: 0; right: 0; bottom: 0; z-index: 1201;
-      background: white; border-radius: 22px 22px 0 0; padding: 20px 16px 36px;
-      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-    }
-    #area-sheet.open { transform: translateY(0); }
-    .area-sheet-title { font-family: 'Jua', sans-serif; font-size: 1rem; color: var(--text); margin-bottom: 14px; text-align: center; }
+    /* ══ 지역 그리드 (area-sheet는 .filter-sheet 공통 스타일 사용) ══ */
     .area-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-    .area-chip {
-      border: 1.5px solid #E8D5F5; border-radius: 10px; padding: 11px 6px;
-      text-align: center; cursor: pointer; font-size: 0.8rem; color: var(--text2);
-      transition: all 0.15s; background: white;
-    }
-    .area-chip.active { border-color: var(--purple); background: var(--purple); color: white; font-weight: 600; }
-    .filter-chip.area-active { border-color: var(--purple); background: #F5EEFF; color: var(--purple); font-weight: 600; }
 
     /* ══ 전화/예약 버튼 ══ */
     .contact-bar { display: flex; gap: 8px; margin-top: 10px; }
@@ -856,15 +837,17 @@
       /* 필터 버튼 */
       .filter-btn { background: #1E1E2C; border-color: #3A2838; color: var(--text); }
       .filter-btn.active { background: var(--purple); border-color: var(--purple); color: white; }
-      /* 필터 시트 공통 */
-      .filter-sheet { background: #1E1E2C; }
+      /* 필터 시트 (ID 선택자로 specificity 확보) */
+      #status-sheet, #area-sheet { background: #1E1E2C !important; }
+      .filter-sheet-handle { background: #3A2838; }
       .filter-sheet-title { color: var(--text); }
       /* 상태 옵션 */
       .status-option { border-bottom-color: #2A1828; }
       .status-option .s-label { color: var(--text); }
+      .status-option .s-icon { filter: none; }
       /* 지역 칩 */
-      .area-chip  { background: #2A1828; border-color: #3A2838; color: var(--text2); }
-      .area-chip.active { background: var(--purple); border-color: var(--purple); color: white; }
+      .area-chip  { background: #2A1828 !important; border-color: #3A2838 !important; color: var(--text2) !important; }
+      .area-chip.active { background: var(--purple) !important; border-color: var(--purple) !important; color: white !important; }
       /* 전화/예약 */
       .btn-call    { background: #1A3020; color: #52D98A; border-color: #2A5038; }
       .btn-reserve { background: #1A2035; color: #7AB8E8; border-color: #2A3858; }
