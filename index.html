@@ -498,6 +498,41 @@
     }
     .login-error-msg { color: rgba(255,200,200,1); font-size: 0.82rem; text-align: center; min-height: 18px; }
 
+    /* ══ 뷰 토글 버튼 ══ */
+    #view-toggle-btn {
+      position: fixed; bottom: 100px; left: 20px; z-index: 500;
+      background: white; border: 2px solid #E8D5F5; border-radius: 20px;
+      padding: 9px 16px; box-shadow: 0 2px 14px rgba(0,0,0,0.15);
+      font-family: 'Noto Sans KR', sans-serif; font-size: 0.82rem;
+      color: var(--purple); cursor: pointer;
+      display: flex; align-items: center; gap: 6px; transition: transform 0.15s;
+    }
+    #view-toggle-btn:active { transform: scale(0.95); }
+
+    /* ══ 목록 뷰 ══ */
+    #list-view {
+      position: fixed; top: 104px; left: 0; right: 0; bottom: 0;
+      z-index: 2; background: var(--bg); overflow-y: auto;
+      padding: 12px 16px; display: none;
+    }
+    #list-view.active { display: block; }
+    .list-empty { text-align: center; padding: 56px 20px; color: var(--text2); font-size: 0.9rem; }
+    .list-card {
+      background: white; border-radius: 14px; padding: 14px 16px;
+      margin-bottom: 10px; box-shadow: 0 2px 10px var(--shadow);
+      cursor: pointer; transition: transform 0.15s;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .list-card:active { transform: scale(0.98); }
+    .list-card-info { flex: 1; min-width: 0; }
+    .list-card-name { font-weight: 700; font-size: 0.95rem; color: var(--text);
+      margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-card-addr { font-size: 0.78rem; color: var(--text2); margin-bottom: 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .list-card-alcohol { font-size: 0.72rem; color: var(--purple2); }
+    .list-card-vote   { font-size: 0.72rem; color: var(--text2); }
+
     /* ══ 추천/비추천 (action-bar로 통합) ══ */
 
     /* ══ 후기 ══ */
@@ -714,6 +749,12 @@
 
 <!-- ════ 지도 ════ -->
 <div id="map" class="hidden"></div>
+
+<!-- ════ 목록 뷰 ════ -->
+<div id="list-view"></div>
+
+<!-- ════ 뷰 토글 버튼 ════ -->
+<button id="view-toggle-btn" class="hidden" onclick="toggleView()">📋 목록 보기</button>
 
 <!-- ════ 내 위치 버튼 ════ -->
 <button id="locate-btn" class="hidden" onclick="locateMe()" title="내 위치로 이동">📍</button>
@@ -992,8 +1033,9 @@ let activeFilter = 'all';
 let currentDocId = null; // 바텀 시트에 열린 문서
 let formMode = 'add';    // 'add' | 'edit'
 let selectedPlace = null;
-let currentVote = null;   // 'up' | 'down' | null
+let currentVote = null;
 let currentFavorite = false;
+let currentView = 'map';
 let reviewVoteChoice = '';
 let reviewPhotos = [];
 
@@ -1052,7 +1094,7 @@ function signOut() {
 
 function showApp() {
   document.getElementById('login-screen').style.display = 'none';
-  ['header','filter-bar','map','fab','locate-btn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
+  ['header','filter-bar','map','fab','locate-btn','view-toggle-btn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
 
   // 관리자 버튼 표시
   if (currentUser.email === ADMIN_EMAIL) {
@@ -1136,6 +1178,7 @@ function setFilter(f) {
   activeFilter = f;
   document.querySelectorAll('.filter-chip').forEach(c => c.classList.toggle('active', c.dataset.filter === f));
   renderMarkers();
+  if (currentView === 'list') renderListView();
 }
 
 /* ════ 바텀 시트 ════ */
@@ -1584,6 +1627,68 @@ function showToast(msg) {
   el.className = 'toast'; el.textContent = msg;
   document.body.appendChild(el);
   toastTimer = setTimeout(() => el.remove(), 2800);
+}
+
+/* ════ 목록 뷰 ════ */
+function toggleView() {
+  currentView = currentView === 'map' ? 'list' : 'map';
+  const listEl   = document.getElementById('list-view');
+  const mapEl    = document.getElementById('map');
+  const btn      = document.getElementById('view-toggle-btn');
+  const locateEl = document.getElementById('locate-btn');
+  const fabEl    = document.getElementById('fab');
+
+  if (currentView === 'list') {
+    listEl.classList.add('active');
+    mapEl.style.visibility = 'hidden';
+    locateEl.style.display = 'none';
+    fabEl.style.display    = 'none';
+    btn.innerHTML = '🗺️ 지도 보기';
+    renderListView();
+    closeSheet();
+  } else {
+    listEl.classList.remove('active');
+    mapEl.style.visibility = '';
+    locateEl.style.display = '';
+    fabEl.style.display    = '';
+    btn.innerHTML = '📋 목록 보기';
+    setTimeout(() => map && map.invalidateSize(), 100);
+  }
+}
+
+function renderListView() {
+  const container = document.getElementById('list-view');
+  const filtered  = activeFilter === 'all' ? allDocs : allDocs.filter(d => d.corkageStatus === activeFilter);
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="list-empty">해당하는 식당이 없습니다.</div>';
+    return;
+  }
+
+  const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'불가', unknown:'정보없음' };
+  container.innerHTML = filtered.map(doc => {
+    const alcohol = doc.alcoholTypes?.length
+      ? `<span class="list-card-alcohol">${doc.alcoholTypes.map(a => ALCOHOL_LABELS[a] || a).join(' · ')}</span>` : '';
+    const vote = (doc.upCount || doc.downCount)
+      ? `<span class="list-card-vote">👍 ${doc.upCount||0} · 👎 ${doc.downCount||0}</span>` : '';
+    return `<div class="list-card" onclick="goToPlaceFromList('${doc.id}')">
+      <div class="list-card-info">
+        <div class="list-card-name">${doc.name}</div>
+        <div class="list-card-addr">📍 ${doc.address || '-'}</div>
+        <div class="list-card-meta">${alcohol}${vote}</div>
+      </div>
+      <span class="status-badge ${doc.corkageStatus || 'unknown'}" style="flex-shrink:0;font-size:0.74rem;white-space:nowrap">
+        ${statusLabel[doc.corkageStatus] || '정보없음'}
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function goToPlaceFromList(docId) {
+  if (currentView === 'list') toggleView();
+  const doc = allDocs.find(d => d.id === docId);
+  if (doc?.lat && doc?.lng) map.setView([doc.lat, doc.lng], 16);
+  setTimeout(() => openSheet(docId), 380);
 }
 
 /* ════ 즐겨찾기 ════ */
