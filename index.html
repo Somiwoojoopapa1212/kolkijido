@@ -789,6 +789,33 @@
     /* ══ 지역 그리드 (area-sheet는 .filter-sheet 공통 스타일 사용) ══ */
     .area-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 
+    /* ══ 마커 미니 팝업 (peek card) ══ */
+    #peek-card {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 750;
+      background: white; border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 24px rgba(82,24,72,0.14);
+      transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+      padding: 0 20px 28px;
+    }
+    #peek-card.open { transform: translateY(0); }
+    .peek-handle { width: 36px; height: 4px; background: #E0D0F0; border-radius: 2px; margin: 12px auto 14px; }
+    .peek-content { display: flex; align-items: center; gap: 14px; }
+    .peek-left { flex: 1; min-width: 0; }
+    .peek-name {
+      font-family: 'Jua', sans-serif; font-size: 1.1rem; color: var(--text);
+      margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .peek-addr { font-size: 0.78rem; color: var(--text2); margin-bottom: 8px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .peek-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .peek-vote { font-size: 0.78rem; color: var(--text2); }
+    .peek-detail-btn {
+      background: var(--purple); color: white; border: none; border-radius: 12px;
+      padding: 11px 16px; font-family: 'Jua', sans-serif; font-size: 0.88rem;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: transform 0.15s;
+    }
+    .peek-detail-btn:active { transform: scale(0.96); }
+
     /* ══ PWA 설치 배너 ══ */
     #install-banner {
       position: fixed; bottom: 84px; left: 16px; right: 16px; z-index: 9000;
@@ -869,6 +896,11 @@
 
       /* 메뉴 */
       .menu-logout:active { background: #2A1020; }
+      /* peek card */
+      #peek-card { background: #1E1E2C; box-shadow: 0 -4px 24px rgba(0,0,0,0.5); }
+      .peek-handle { background: #3A2838; }
+      .peek-name   { color: var(--text); }
+      .peek-addr   { color: var(--text2); }
       /* PWA 배너 */
       #install-banner { background: #1E1E2C; box-shadow: 0 4px 24px rgba(0,0,0,0.4); }
       .install-ios-tip { border-top-color: #2A1828; }
@@ -1307,6 +1339,22 @@
   </div>
 </div>
 
+<!-- ════ 마커 미니 팝업 ════ -->
+<div id="peek-card">
+  <div class="peek-handle"></div>
+  <div class="peek-content">
+    <div class="peek-left">
+      <div class="peek-name" id="pk-name">-</div>
+      <div class="peek-addr" id="pk-addr">-</div>
+      <div class="peek-meta">
+        <span class="status-badge" id="pk-status">-</span>
+        <span class="peek-vote" id="pk-vote"></span>
+      </div>
+    </div>
+    <button class="peek-detail-btn" onclick="openSheetFromPeek()">자세히 보기 →</button>
+  </div>
+</div>
+
 <!-- ════ PWA 설치 유도 배너 ════ -->
 <div id="install-banner" class="hidden">
   <div class="install-row">
@@ -1387,6 +1435,7 @@ let currentView = 'map';
 let sortBy = 'default';
 let userLocation = null;
 let activeArea = '전체';
+let peekDocId = null;
 let reviewVoteChoice = '';
 let reviewPhotos = [];
 
@@ -1473,7 +1522,7 @@ function initMap() {
     zoomToBoundsOnClick: true,
   });
   map.addLayer(markerCluster);
-  map.on('click', () => closeSheet());
+  map.on('click', () => { closeSheet(); closePeek(); });
 }
 
 function createMarkerIcon(status, name) {
@@ -1520,7 +1569,7 @@ function renderMarkers() {
   filtered.forEach(doc => {
     if (!doc.lat || !doc.lng) return;
     const marker = L.marker([doc.lat, doc.lng], { icon: createMarkerIcon(doc.corkageStatus || 'unknown', doc.name) });
-    marker.on('click', (e) => { L.DomEvent.stopPropagation(e); openSheet(doc.id); });
+    marker.on('click', (e) => { L.DomEvent.stopPropagation(e); closeSheet(); openPeek(doc.id); });
     markerCluster.addLayer(marker);
     markers[doc.id] = marker;
   });
@@ -2368,6 +2417,38 @@ function checkDeepLink() {
   };
   if (allDocs.length) tryOpen();
   else setTimeout(tryOpen, 2000);
+}
+
+/* ════ 마커 미니 팝업 ════ */
+function openPeek(docId) {
+  const doc = allDocs.find(d => d.id === docId);
+  if (!doc) return;
+  peekDocId = docId;
+
+  document.getElementById('pk-name').innerHTML =
+    doc.name + (isNew(doc) ? '<span class="new-badge">NEW</span>' : '');
+  document.getElementById('pk-addr').textContent = '📍 ' + (doc.address || '-');
+
+  const statusEl = document.getElementById('pk-status');
+  statusEl.textContent = STATUS_LABELS[doc.corkageStatus] || '정보 없음';
+  statusEl.className = 'status-badge ' + (doc.corkageStatus || 'unknown');
+
+  const voteEl = document.getElementById('pk-vote');
+  voteEl.textContent = (doc.upCount || doc.downCount)
+    ? `👍 ${doc.upCount || 0} · 👎 ${doc.downCount || 0}` : '';
+
+  document.getElementById('peek-card').classList.add('open');
+}
+
+function closePeek() {
+  document.getElementById('peek-card').classList.remove('open');
+  peekDocId = null;
+}
+
+function openSheetFromPeek() {
+  const id = peekDocId;
+  closePeek();
+  if (id) openSheet(id);
 }
 
 /* ════ PWA 설치 유도 ════ */
