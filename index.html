@@ -365,9 +365,119 @@
     .update-banner .ubtn { background: #52B788; border: none; border-radius: 8px; padding: 7px 14px; color: white; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
 
     .hidden { display: none !important; }
+
+    /* ══ 카카오 인앱 브라우저 안내 화면 ══ */
+    #kakao-notice {
+      position: fixed; inset: 0; background: linear-gradient(160deg, #4A235A 0%, #1A0828 100%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      z-index: 9999; padding: 32px 24px; text-align: center;
+    }
+    .kakao-logo { font-size: 4rem; margin-bottom: 12px; }
+    .kakao-title { font-family: 'Jua', sans-serif; font-size: 1.8rem; color: white; margin-bottom: 20px; }
+    .kakao-box {
+      background: rgba(255,255,255,0.12); border-radius: 18px;
+      padding: 20px 20px; margin-bottom: 28px; max-width: 340px;
+    }
+    .kakao-box p { color: rgba(255,255,255,0.9); font-size: 0.92rem; line-height: 1.7; margin: 0; }
+    .kakao-box strong { color: #FFD700; }
+    .kakao-btns { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; }
+    .btn-copy-url {
+      background: white; color: #2C3E50; border: none; border-radius: 14px;
+      padding: 14px 20px; font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3); transition: transform 0.15s;
+    }
+    .btn-copy-url:active { transform: scale(0.97); }
+    .btn-open-browser {
+      background: rgba(255,255,255,0.15); color: white;
+      border: 1.5px solid rgba(255,255,255,0.35); border-radius: 14px;
+      padding: 13px 20px; font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.9rem; cursor: pointer; transition: transform 0.15s;
+    }
+    .btn-open-browser:active { transform: scale(0.97); }
+
+    /* ══ 추천/비추천 ══ */
+    .recommend-row { display: flex; gap: 10px; margin: 14px 0 0; }
+    .btn-vote {
+      flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
+      border-radius: 12px; padding: 12px; cursor: pointer;
+      border: 2px solid #E8D5F5; background: white;
+      font-family: 'Noto Sans KR', sans-serif; font-size: 0.88rem;
+      color: var(--text2); transition: all 0.15s;
+    }
+    .btn-vote .vote-icon { font-size: 1.2rem; }
+    .btn-vote .vote-cnt  { font-weight: 700; font-size: 1rem; }
+    .btn-vote.up.active  { background: #EAFAF1; border-color: var(--free); color: var(--free); }
+    .btn-vote.down.active{ background: #FDEDEC; border-color: var(--no);   color: var(--no); }
+
+    /* ══ 후기 ══ */
+    .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .reviews-title  { font-weight: 700; font-size: 0.92rem; color: var(--text); }
+    .btn-write-review {
+      background: var(--purple); color: white; border: none; border-radius: 10px;
+      padding: 7px 14px; font-size: 0.82rem; cursor: pointer; font-family: 'Noto Sans KR', sans-serif;
+    }
+    .review-card { background: #FAF7FF; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid #EDE0FF; }
+    .review-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+    .review-badge  { display: inline-flex; align-items: center; gap: 4px; border-radius: 10px; padding: 2px 10px; font-size: 0.78rem; font-weight: 700; }
+    .review-badge.up   { background: #EAFAF1; color: var(--free); }
+    .review-badge.down { background: #FDEDEC; color: var(--no); }
+    .review-date    { font-size: 0.75rem; color: var(--text2); }
+    .review-content { font-size: 0.88rem; color: var(--text); line-height: 1.5; margin-bottom: 8px; white-space: pre-wrap; }
+    .review-photos  { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .review-photo-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 1px solid #E8D5F5; }
+    .review-footer  { font-size: 0.75rem; color: var(--text2); text-align: right; margin-top: 4px; }
+
+    /* ══ 후기 작성 오버레이 ══ */
+    #review-overlay {
+      position: fixed; inset: 0; z-index: 2200;
+      background: var(--bg); display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #review-overlay.open { transform: translateY(0); }
+    .vote-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .vote-choice {
+      border: 2px solid #E8D5F5; border-radius: 12px; padding: 14px;
+      text-align: center; cursor: pointer; font-size: 0.9rem; color: var(--text2);
+      transition: all 0.15s; background: white;
+    }
+    .vote-choice[data-val="up"].active   { border-color: var(--free); background: #EAFAF1; color: var(--free); font-weight: 700; }
+    .vote-choice[data-val="down"].active { border-color: var(--no);   background: #FDEDEC; color: var(--no);   font-weight: 700; }
+    .photo-preview-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+    .photo-thumb { position: relative; }
+    .photo-thumb img { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; border: 1.5px solid #E8D5F5; }
+    .photo-remove {
+      position: absolute; top: -6px; right: -6px; width: 20px; height: 20px;
+      border-radius: 50%; background: var(--no); color: white; border: none;
+      font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .btn-add-photo {
+      display: flex; align-items: center; justify-content: center;
+      width: 80px; height: 80px; border: 2px dashed #C9B4E0; border-radius: 10px;
+      color: var(--purple2); font-size: 0.85rem; cursor: pointer; background: white;
+    }
   </style>
 </head>
 <body>
+
+<!-- ════ 카카오 인앱 브라우저 안내 ════ -->
+<div id="kakao-notice" class="hidden">
+  <div class="kakao-logo">🍷</div>
+  <div class="kakao-title">콜키지도</div>
+  <div class="kakao-box">
+    <p>
+      카카오톡 브라우저에서는<br>
+      <strong>Google 로그인이 제한</strong>될 수 있어요.<br><br>
+      아래 버튼으로 주소를 복사한 뒤<br>
+      <strong>Chrome 또는 Safari</strong>에서 열어주세요.<br><br>
+      또는 화면 우측 하단 <strong>⋯ 메뉴 →<br>"다른 브라우저로 열기"</strong>를 선택해주세요.
+    </p>
+  </div>
+  <div class="kakao-btns">
+    <button class="btn-copy-url" onclick="copyAppUrl()">🔗 주소 복사하기</button>
+    <button class="btn-open-browser" onclick="tryOpenExternal()">🌐 외부 브라우저로 열기 시도</button>
+  </div>
+</div>
 
 <!-- ════ 로그인 화면 ════ -->
 <div id="login-screen">
@@ -428,6 +538,19 @@
     <div class="sheet-addr" id="sh-addr">📍 -</div>
     <div class="sheet-divider"></div>
 
+    <div class="recommend-row">
+      <button class="btn-vote up" id="sh-vote-up" onclick="castVote('up')">
+        <span class="vote-icon">👍</span>
+        <span class="vote-cnt" id="sh-up-cnt">0</span>
+        <span>추천</span>
+      </button>
+      <button class="btn-vote down" id="sh-vote-down" onclick="castVote('down')">
+        <span class="vote-icon">👎</span>
+        <span class="vote-cnt" id="sh-down-cnt">0</span>
+        <span>비추</span>
+      </button>
+    </div>
+
     <div class="info-row" id="sh-category-row">
       <span class="info-icon">🏷️</span>
       <span class="info-label">카테고리</span>
@@ -465,6 +588,13 @@
       <button class="btn-edit" onclick="openFormForEdit()">✏️ 정보 수정</button>
       <button class="btn-report" onclick="reportPlace()">🚨 오류 신고</button>
     </div>
+
+    <div class="sheet-divider"></div>
+    <div class="reviews-header">
+      <span class="reviews-title">📝 후기</span>
+      <button class="btn-write-review" onclick="openReview()">후기 작성</button>
+    </div>
+    <div id="sh-reviews"></div>
   </div>
 </div>
 
@@ -569,6 +699,49 @@
   </div>
 </div>
 
+<!-- ════ 후기 작성 오버레이 ════ -->
+<div id="review-overlay">
+  <div class="form-header">
+    <button class="form-back" onclick="closeReview()">←</button>
+    <h2>📝 후기 작성</h2>
+  </div>
+  <div class="form-body">
+    <div class="form-place-card">
+      <div class="form-place-name" id="review-place-name">-</div>
+      <div class="form-place-addr" id="review-place-addr">-</div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">⭐ 방문 평가</label>
+      <div class="vote-choice-grid">
+        <div class="vote-choice" data-val="up"   onclick="selectVoteChoice('up')">👍 추천해요</div>
+        <div class="vote-choice" data-val="down" onclick="selectVoteChoice('down')">👎 별로예요</div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">📅 방문 일자</label>
+      <input type="date" id="review-date" class="form-input">
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">✍️ 후기 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
+      <textarea id="review-content" class="form-textarea" placeholder="방문 경험을 자유롭게 남겨주세요..."></textarea>
+    </div>
+
+    <div class="form-section">
+      <label class="form-label">📸 사진 <span style="font-size:0.75rem;opacity:0.7">(최대 3장, 선택사항)</span></label>
+      <div class="photo-preview-grid" id="photo-preview"></div>
+      <label class="btn-add-photo" id="photo-add-btn">
+        + 추가
+        <input type="file" accept="image/*" multiple id="photo-input" onchange="handlePhotos(this)" hidden>
+      </label>
+    </div>
+
+    <button class="btn-submit" onclick="submitReview()">후기 등록</button>
+  </div>
+</div>
+
 <!-- 업데이트 배너 -->
 <div class="update-banner hidden" id="update-banner">
   <div class="umsg">🆕 새 버전이 있어요!<small>지금 업데이트하거나 다음 실행 시 자동 적용됩니다.</small></div>
@@ -582,6 +755,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <script src="firebase-config.js"></script>
 <!-- Leaflet -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -602,7 +776,10 @@ let allDocs  = [];      // 전체 문서 캐시
 let activeFilter = 'all';
 let currentDocId = null; // 바텀 시트에 열린 문서
 let formMode = 'add';    // 'add' | 'edit'
-let selectedPlace = null; // Kakao 검색 결과에서 선택된 식당
+let selectedPlace = null;
+let currentVote = null;   // 'up' | 'down' | null
+let reviewVoteChoice = '';
+let reviewPhotos = [];
 
 // 폼 상태
 let formStatus    = '';
@@ -616,7 +793,11 @@ auth.onAuthStateChanged(user => {
     showApp();
   } else {
     currentUser = null;
-    document.getElementById('login-screen').style.display = 'flex';
+    if (isKakaoBrowser()) {
+      document.getElementById('kakao-notice').classList.remove('hidden');
+    } else {
+      document.getElementById('login-screen').style.display = 'flex';
+    }
     ['header','filter-bar','map','fab','locate-btn'].forEach(id => document.getElementById(id).classList.add('hidden'));
   }
 });
@@ -788,6 +969,17 @@ function openSheet(docId) {
   const date = doc.addedAt?.toDate ? doc.addedAt.toDate().toLocaleDateString('ko-KR') : '';
   document.getElementById('sh-meta').textContent = `${name} 등록${date ? ' · ' + date : ''}`;
 
+  // 추천/비추천 카운트
+  document.getElementById('sh-up-cnt').textContent = doc.upCount || 0;
+  document.getElementById('sh-down-cnt').textContent = doc.downCount || 0;
+  currentVote = null;
+  updateVoteUI();
+  loadVote(docId);
+
+  // 후기 로드
+  document.getElementById('sh-reviews').innerHTML = '<div style="color:var(--text2);font-size:0.82rem;padding:8px 0">불러오는 중...</div>';
+  loadReviewsForSheet(docId);
+
   document.getElementById('bottom-sheet').classList.add('open');
 }
 
@@ -931,7 +1123,7 @@ async function openFormForEdit() {
   document.getElementById('form-place-name').textContent = doc.name;
   document.getElementById('form-place-addr').textContent = doc.address;
   document.getElementById('form-submit-btn').textContent = '수정 저장';
-  selectedPlace = { name: doc.name, address: doc.address, lat: doc.lat, lng: doc.lng, kakaoId: doc.kakaoId || '' };
+  selectedPlace = { name: doc.name, address: doc.address, lat: doc.lat, lng: doc.lng, kakaoId: doc.kakaoId || '', category: doc.category || '', phone: doc.phone || '' };
 
   // 기존 값 채우기
   if (doc.corkageStatus) selectStatus(doc.corkageStatus);
@@ -1164,6 +1356,228 @@ function showToast(msg) {
   el.className = 'toast'; el.textContent = msg;
   document.body.appendChild(el);
   toastTimer = setTimeout(() => el.remove(), 2800);
+}
+
+/* ════ 카카오 인앱 브라우저 ════ */
+function isKakaoBrowser() {
+  return /KAKAOTALK|kakaotalk/i.test(navigator.userAgent);
+}
+
+function copyAppUrl() {
+  const url = window.location.href;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => showToast('✅ 주소 복사 완료! Chrome에 붙여넣기 해주세요.'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('✅ 주소가 복사됐어요!');
+  }
+}
+
+function tryOpenExternal() {
+  const url = window.location.href;
+  if (/android/i.test(navigator.userAgent)) {
+    window.location.href = `intent://${url.replace(/https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
+  } else {
+    window.open(url, '_system');
+    setTimeout(() => showToast('자동으로 열리지 않으면 주소를 복사해 Safari에 붙여넣어 주세요.'), 800);
+  }
+}
+
+/* ════ 추천/비추천 ════ */
+function updateVoteUI() {
+  document.getElementById('sh-vote-up').classList.toggle('active', currentVote === 'up');
+  document.getElementById('sh-vote-down').classList.toggle('active', currentVote === 'down');
+}
+
+async function loadVote(docId) {
+  if (!currentUser) return;
+  const voteId = `${docId}_${currentUser.uid}`;
+  const snap = await db.collection('recommendations').doc(voteId).get();
+  if (snap.exists && currentDocId === docId) {
+    currentVote = snap.data().vote;
+    updateVoteUI();
+  }
+}
+
+async function castVote(vote) {
+  if (!currentDocId || !currentUser) return;
+  const voteId = `${currentDocId}_${currentUser.uid}`;
+  const voteRef = db.collection('recommendations').doc(voteId);
+  const placeRef = db.collection('corkage').doc(currentDocId);
+
+  showLoading();
+  try {
+    const prevSnap = await voteRef.get();
+    const prevVote = prevSnap.exists ? prevSnap.data().vote : null;
+    const batch = db.batch();
+
+    if (prevVote === vote) {
+      batch.delete(voteRef);
+      batch.update(placeRef, { [vote === 'up' ? 'upCount' : 'downCount']: firebase.firestore.FieldValue.increment(-1) });
+      currentVote = null;
+    } else {
+      batch.set(voteRef, { placeId: currentDocId, uid: currentUser.uid, vote });
+      const updates = {};
+      if (prevVote) updates[prevVote === 'up' ? 'upCount' : 'downCount'] = firebase.firestore.FieldValue.increment(-1);
+      updates[vote === 'up' ? 'upCount' : 'downCount'] = firebase.firestore.FieldValue.increment(1);
+      batch.update(placeRef, updates);
+      currentVote = vote;
+    }
+    await batch.commit();
+
+    const updated = await placeRef.get();
+    const d = updated.data();
+    document.getElementById('sh-up-cnt').textContent   = d.upCount   || 0;
+    document.getElementById('sh-down-cnt').textContent = d.downCount || 0;
+    const idx = allDocs.findIndex(x => x.id === currentDocId);
+    if (idx !== -1) allDocs[idx] = { ...allDocs[idx], upCount: d.upCount || 0, downCount: d.downCount || 0 };
+    updateVoteUI();
+  } catch(e) { showToast('처리 실패: ' + e.message); }
+  hideLoading();
+}
+
+/* ════ 후기 ════ */
+function openReview() {
+  if (!currentDocId) return;
+  const doc = allDocs.find(d => d.id === currentDocId);
+  if (!doc) return;
+  document.getElementById('review-place-name').textContent = doc.name;
+  document.getElementById('review-place-addr').textContent = doc.address || '';
+  reviewVoteChoice = '';
+  reviewPhotos = [];
+  document.querySelectorAll('.vote-choice').forEach(el => el.classList.remove('active'));
+  document.getElementById('review-date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('review-content').value = '';
+  document.getElementById('photo-preview').innerHTML = '';
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-add-btn').style.display = '';
+  document.getElementById('review-overlay').classList.add('open');
+}
+
+function closeReview() {
+  document.getElementById('review-overlay').classList.remove('open');
+}
+
+function selectVoteChoice(val) {
+  reviewVoteChoice = val;
+  document.querySelectorAll('.vote-choice').forEach(el => el.classList.toggle('active', el.dataset.val === val));
+}
+
+function handlePhotos(input) {
+  const files = Array.from(input.files);
+  const remaining = 3 - reviewPhotos.length;
+  reviewPhotos = [...reviewPhotos, ...files.slice(0, remaining)];
+  renderPhotoPreview();
+  input.value = '';
+  document.getElementById('photo-add-btn').style.display = reviewPhotos.length >= 3 ? 'none' : '';
+}
+
+function removePhoto(idx) {
+  reviewPhotos.splice(idx, 1);
+  renderPhotoPreview();
+  document.getElementById('photo-add-btn').style.display = '';
+}
+
+function renderPhotoPreview() {
+  document.getElementById('photo-preview').innerHTML = reviewPhotos.map((f, i) =>
+    `<div class="photo-thumb">
+      <img src="${URL.createObjectURL(f)}" alt="">
+      <button class="photo-remove" onclick="removePhoto(${i})">✕</button>
+    </div>`
+  ).join('');
+}
+
+async function submitReview() {
+  if (!reviewVoteChoice) { showToast('추천/비추천을 선택해주세요.'); return; }
+  if (!currentDocId) return;
+  showLoading();
+  try {
+    const photoUrls = [];
+    for (let i = 0; i < reviewPhotos.length; i++) {
+      const file = reviewPhotos[i];
+      const path = `kolkijido/reviews/${currentDocId}/${Date.now()}_${i}_${file.name}`;
+      const snap = await firebase.storage().ref(path).put(file);
+      photoUrls.push(await snap.ref.getDownloadURL());
+    }
+
+    const reviewData = {
+      placeId: currentDocId,
+      uid: currentUser.uid,
+      userName: currentUser.displayName || '익명',
+      userPhoto: currentUser.photoURL || null,
+      visitDate: document.getElementById('review-date').value,
+      recommend: reviewVoteChoice === 'up',
+      content: document.getElementById('review-content').value.trim(),
+      photoUrls,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    await db.collection('reviews').add(reviewData);
+
+    // 후기 평가를 추천/비추천 카운트에도 반영
+    const voteId = `${currentDocId}_${currentUser.uid}`;
+    const voteRef = db.collection('recommendations').doc(voteId);
+    const placeRef = db.collection('corkage').doc(currentDocId);
+    const prevSnap = await voteRef.get();
+    const prevVote = prevSnap.exists ? prevSnap.data().vote : null;
+    const newVote = reviewVoteChoice;
+    if (prevVote !== newVote) {
+      const batch = db.batch();
+      batch.set(voteRef, { placeId: currentDocId, uid: currentUser.uid, vote: newVote });
+      const updates = {};
+      if (prevVote) updates[prevVote === 'up' ? 'upCount' : 'downCount'] = firebase.firestore.FieldValue.increment(-1);
+      updates[newVote === 'up' ? 'upCount' : 'downCount'] = firebase.firestore.FieldValue.increment(1);
+      batch.update(placeRef, updates);
+      await batch.commit();
+      currentVote = newVote;
+      updateVoteUI();
+      const upd = (await placeRef.get()).data();
+      document.getElementById('sh-up-cnt').textContent   = upd.upCount   || 0;
+      document.getElementById('sh-down-cnt').textContent = upd.downCount || 0;
+    }
+
+    closeReview();
+    showToast('✅ 후기가 등록됐습니다!');
+    loadReviewsForSheet(currentDocId);
+  } catch(e) { showToast('등록 실패: ' + e.message); }
+  hideLoading();
+}
+
+async function loadReviewsForSheet(docId) {
+  const container = document.getElementById('sh-reviews');
+  if (!container) return;
+  try {
+    const snap = await db.collection('reviews').where('placeId', '==', docId).get();
+    if (!snap.docs.length) {
+      container.innerHTML = '<div style="color:var(--text2);font-size:0.82rem;padding:8px 0">아직 후기가 없어요. 첫 번째 후기를 남겨보세요!</div>';
+      return;
+    }
+    const reviews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+    container.innerHTML = reviews.slice(0, 10).map(r => {
+      const photos = r.photoUrls?.length
+        ? `<div class="review-photos">${r.photoUrls.map(u => `<img src="${u}" class="review-photo-thumb" onclick="viewPhoto('${u}')">`).join('')}</div>` : '';
+      return `<div class="review-card">
+        <div class="review-header">
+          <span class="review-badge ${r.recommend ? 'up' : 'down'}">${r.recommend ? '👍 추천' : '👎 비추천'}</span>
+          ${r.visitDate ? `<span class="review-date">📅 ${r.visitDate} 방문</span>` : ''}
+        </div>
+        ${r.content ? `<div class="review-content">${r.content}</div>` : ''}
+        ${photos}
+        <div class="review-footer">${r.userName || '익명'}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<div style="color:var(--text2);font-size:0.82rem;padding:8px 0">후기를 불러오지 못했어요.</div>';
+  }
+}
+
+function viewPhoto(url) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  ov.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:95vh;object-fit:contain;border-radius:8px">`;
+  ov.onclick = () => ov.remove();
+  document.body.appendChild(ov);
 }
 
 /* ════ SW + 자동 업데이트 ════ */
