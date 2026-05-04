@@ -160,16 +160,21 @@
 
     .sheet-meta { font-size: 0.75rem; color: var(--text2); margin-top: 12px; }
 
-    .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-    .btn-edit {
-      background: var(--purple); color: white; border: none; border-radius: 12px;
-      padding: 13px; font-family: 'Jua', sans-serif; font-size: 0.95rem; cursor: pointer;
+    /* 컴팩트 액션 바 */
+    .action-bar { display: flex; gap: 6px; margin-top: 14px; }
+    .btn-action {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 2px; border-radius: 10px; padding: 9px 4px;
+      font-size: 0.7rem; cursor: pointer; border: 1.5px solid #E8D5F5;
+      background: white; color: var(--text2); transition: all 0.15s;
+      font-family: 'Noto Sans KR', sans-serif; line-height: 1.3;
     }
-    .btn-report {
-      background: #FDF0F0; color: var(--no); border: 1.5px solid #FADADD;
-      border-radius: 12px; padding: 13px; font-family: 'Jua', sans-serif;
-      font-size: 0.95rem; cursor: pointer;
-    }
+    .btn-action .act-icon { font-size: 1.05rem; line-height: 1; }
+    .btn-action .act-cnt  { font-weight: 700; font-size: 0.78rem; }
+    .btn-action.vote-up.active  { background: #EAFAF1; border-color: var(--free); color: var(--free); }
+    .btn-action.vote-down.active{ background: #FDEDEC; border-color: var(--no);   color: var(--no); }
+    .btn-action.act-edit   { border-color: var(--purple2); color: var(--purple); background: #F5EEFF; }
+    .btn-action.act-report { border-color: #FADADD; color: var(--no); background: #FDF0F0; }
     .btn-close-sheet {
       position: absolute; top: 12px; right: 16px;
       background: #F0E8FF; border: none; border-radius: 50%; width: 30px; height: 30px;
@@ -493,19 +498,7 @@
     }
     .login-error-msg { color: rgba(255,200,200,1); font-size: 0.82rem; text-align: center; min-height: 18px; }
 
-    /* ══ 추천/비추천 ══ */
-    .recommend-row { display: flex; gap: 10px; margin: 14px 0 0; }
-    .btn-vote {
-      flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-      border-radius: 12px; padding: 12px; cursor: pointer;
-      border: 2px solid #E8D5F5; background: white;
-      font-family: 'Noto Sans KR', sans-serif; font-size: 0.88rem;
-      color: var(--text2); transition: all 0.15s;
-    }
-    .btn-vote .vote-icon { font-size: 1.2rem; }
-    .btn-vote .vote-cnt  { font-weight: 700; font-size: 1rem; }
-    .btn-vote.up.active  { background: #EAFAF1; border-color: var(--free); color: var(--free); }
-    .btn-vote.down.active{ background: #FDEDEC; border-color: var(--no);   color: var(--no); }
+    /* ══ 추천/비추천 (action-bar로 통합) ══ */
 
     /* ══ 후기 ══ */
     .reviews-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
@@ -739,19 +732,6 @@
     <div class="sheet-addr" id="sh-addr">📍 -</div>
     <div class="sheet-divider"></div>
 
-    <div class="recommend-row">
-      <button class="btn-vote up" id="sh-vote-up" onclick="castVote('up')">
-        <span class="vote-icon">👍</span>
-        <span class="vote-cnt" id="sh-up-cnt">0</span>
-        <span>추천</span>
-      </button>
-      <button class="btn-vote down" id="sh-vote-down" onclick="castVote('down')">
-        <span class="vote-icon">👎</span>
-        <span class="vote-cnt" id="sh-down-cnt">0</span>
-        <span>비추</span>
-      </button>
-    </div>
-
     <div class="info-row" id="sh-category-row">
       <span class="info-icon">🏷️</span>
       <span class="info-label">카테고리</span>
@@ -785,9 +765,25 @@
       <span class="info-value" id="sh-memo" style="font-size:0.85rem;color:var(--text2)">-</span>
     </div>
     <div class="sheet-meta" id="sh-meta"></div>
-    <div class="sheet-actions">
-      <button class="btn-edit" onclick="openFormForEdit()">✏️ 정보 수정</button>
-      <button class="btn-report" onclick="reportPlace()">🚨 오류 신고</button>
+    <div class="action-bar">
+      <button class="btn-action vote-up" id="sh-vote-up" onclick="castVote('up')">
+        <span class="act-icon">👍</span>
+        <span class="act-cnt" id="sh-up-cnt">0</span>
+        <span>추천</span>
+      </button>
+      <button class="btn-action vote-down" id="sh-vote-down" onclick="castVote('down')">
+        <span class="act-icon">👎</span>
+        <span class="act-cnt" id="sh-down-cnt">0</span>
+        <span>비추</span>
+      </button>
+      <button class="btn-action act-edit" onclick="openFormForEdit()">
+        <span class="act-icon">✏️</span>
+        <span>수정</span>
+      </button>
+      <button class="btn-action act-report" onclick="reportPlace()">
+        <span class="act-icon">🚨</span>
+        <span>신고</span>
+      </button>
     </div>
 
     <div class="sheet-divider"></div>
