@@ -512,6 +512,12 @@
       font-size: 0.9rem; cursor: pointer; transition: transform 0.15s;
     }
     .btn-open-browser:active { transform: scale(0.97); }
+    .btn-continue-kakao {
+      background: none; color: rgba(255,255,255,0.45);
+      border: none; font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.82rem; cursor: pointer; padding: 6px 0;
+      text-decoration: underline; text-underline-offset: 3px;
+    }
 
     /* ══ 이메일 로그인 ══ */
     .login-divider {
@@ -955,6 +961,7 @@
   <div class="kakao-btns">
     <button class="btn-copy-url" onclick="copyAppUrl()">🔗 주소 복사하기</button>
     <button class="btn-open-browser" onclick="tryOpenExternal()">🌐 외부 브라우저로 열기 시도</button>
+    <button class="btn-continue-kakao" onclick="continueWithKakao()">카카오톡 브라우저로 계속 이용</button>
   </div>
 </div>
 
@@ -2817,6 +2824,11 @@ function copyAppUrl() {
     ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
     showToast('✅ 주소가 복사됐어요!');
   }
+}
+
+function continueWithKakao() {
+  document.getElementById('kakao-notice').classList.add('hidden');
+  document.getElementById('login-screen').style.display = 'flex';
 }
 
 function tryOpenExternal() {
