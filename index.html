@@ -176,6 +176,12 @@
       cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
       color: var(--purple);
     }
+    .btn-share-sheet {
+      position: absolute; top: 12px; right: 52px;
+      background: #F0E8FF; border: none; border-radius: 50%; width: 30px; height: 30px;
+      cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
+      color: var(--purple);
+    }
 
     /* ══ 검색 오버레이 ══ */
     #search-overlay {
@@ -686,6 +692,7 @@
 
 <!-- ════ 바텀 시트 (상세) ════ -->
 <div id="bottom-sheet">
+  <button class="btn-share-sheet" onclick="sharePlace()">📤</button>
   <button class="btn-close-sheet" onclick="closeSheet()">✕</button>
   <div class="sheet-handle"></div>
   <div class="sheet-content">
@@ -1048,6 +1055,7 @@ async function loadPlaces() {
     const snap = await db.collection('corkage').get();
     allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderMarkers();
+    checkDeepLink();
   } catch(e) {
     showToast('데이터 로드 실패: ' + e.message);
   }
@@ -1521,6 +1529,51 @@ function showToast(msg) {
   el.className = 'toast'; el.textContent = msg;
   document.body.appendChild(el);
   toastTimer = setTimeout(() => el.remove(), 2800);
+}
+
+/* ════ 공유 ════ */
+async function sharePlace() {
+  if (!currentDocId) return;
+  const doc = allDocs.find(d => d.id === currentDocId);
+  if (!doc) return;
+
+  const statusLabel = { free: '무료 콜키지', paid: '유료 콜키지', no: '콜키지 불가', unknown: '정보 없음' };
+  const fee = doc.corkageStatus === 'paid' && doc.corkageFee ? ` (${doc.corkageFee.toLocaleString()}원)` : '';
+  const url  = `${location.origin}${location.pathname}#${currentDocId}`;
+  const text = `🍷 ${doc.name}\n📍 ${doc.address || ''}\n${statusLabel[doc.corkageStatus] || ''}${fee}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: `🍷 ${doc.name}`, text, url });
+    } catch(e) {
+      if (e.name !== 'AbortError') copyToClipboard(url);
+    }
+  } else {
+    copyToClipboard(url);
+  }
+}
+
+function copyToClipboard(text) {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => showToast('🔗 링크가 복사됐습니다!'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('🔗 링크가 복사됐습니다!');
+  }
+}
+
+function checkDeepLink() {
+  const docId = location.hash.slice(1);
+  if (!docId) return;
+  history.replaceState(null, '', location.pathname);
+  const tryOpen = () => {
+    if (allDocs.find(d => d.id === docId)) {
+      openSheet(docId);
+    }
+  };
+  if (allDocs.length) tryOpen();
+  else setTimeout(tryOpen, 2000);
 }
 
 /* ════ 메뉴 드로어 ════ */
