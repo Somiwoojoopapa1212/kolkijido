@@ -182,6 +182,42 @@
       cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
       color: var(--purple);
     }
+    .btn-fav-sheet {
+      position: absolute; top: 12px; right: 88px;
+      background: #F0E8FF; border: none; border-radius: 50%; width: 30px; height: 30px;
+      cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+      color: var(--text2); transition: all 0.15s;
+    }
+    .btn-fav-sheet.active { background: #FEF9E7; color: #F1C40F; }
+
+    /* ══ 즐겨찾기 오버레이 ══ */
+    #favorites-overlay {
+      position: fixed; inset: 0; z-index: 2300;
+      background: var(--bg); display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #favorites-overlay.open { transform: translateY(0); }
+    .fav-item {
+      background: white; border-radius: 14px; padding: 14px 16px;
+      margin-bottom: 10px; box-shadow: 0 2px 10px var(--shadow);
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; gap: 12px; transition: transform 0.15s;
+    }
+    .fav-item:active { transform: scale(0.98); }
+    .fav-item-info { flex: 1; min-width: 0; }
+    .fav-item-name { font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fav-item-addr { font-size: 0.78rem; color: var(--text2);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ══ 메뉴 즐겨찾기 버튼 ══ */
+    .menu-fav-btn {
+      display: flex; align-items: center; gap: 10px; width: 100%;
+      padding: 16px 20px; background: none; border: none;
+      font-family: 'Noto Sans KR', sans-serif; font-size: 0.95rem;
+      color: var(--text); cursor: pointer; text-align: left;
+    }
+    .menu-fav-btn:active { background: #FAF7FF; }
 
     /* ══ 검색 오버레이 ══ */
     #search-overlay {
@@ -660,6 +696,8 @@
     <div id="menu-notices"><div class="notice-empty">불러오는 중...</div></div>
   </div>
   <div class="menu-footer">
+    <button class="menu-fav-btn" onclick="openFavorites(); closeMenu()">⭐ 즐겨찾기</button>
+    <div style="height:1px;background:#F0E8FF"></div>
     <button class="menu-logout" onclick="signOut()">🚪 로그아웃</button>
   </div>
 </div>
@@ -692,6 +730,7 @@
 
 <!-- ════ 바텀 시트 (상세) ════ -->
 <div id="bottom-sheet">
+  <button class="btn-fav-sheet" id="sh-fav-btn" onclick="toggleFavorite()">☆</button>
   <button class="btn-share-sheet" onclick="sharePlace()">📤</button>
   <button class="btn-close-sheet" onclick="closeSheet()">✕</button>
   <div class="sheet-handle"></div>
@@ -868,6 +907,17 @@
   </div>
 </div>
 
+<!-- ════ 즐겨찾기 오버레이 ════ -->
+<div id="favorites-overlay">
+  <div class="form-header">
+    <button class="form-back" onclick="closeFavorites()">←</button>
+    <h2>⭐ 즐겨찾기</h2>
+  </div>
+  <div id="favorites-list" style="flex:1;overflow-y:auto;padding:16px">
+    <div class="admin-empty">불러오는 중...</div>
+  </div>
+</div>
+
 <!-- ════ 후기 작성 오버레이 ════ -->
 <div id="review-overlay">
   <div class="form-header">
@@ -947,6 +997,7 @@ let currentDocId = null; // 바텀 시트에 열린 문서
 let formMode = 'add';    // 'add' | 'edit'
 let selectedPlace = null;
 let currentVote = null;   // 'up' | 'down' | null
+let currentFavorite = false;
 let reviewVoteChoice = '';
 let reviewPhotos = [];
 
@@ -1144,6 +1195,11 @@ function openSheet(docId) {
   const name = doc.addedBy?.name || '익명';
   const date = doc.addedAt?.toDate ? doc.addedAt.toDate().toLocaleDateString('ko-KR') : '';
   document.getElementById('sh-meta').textContent = `${name} 등록${date ? ' · ' + date : ''}`;
+
+  // 즐겨찾기 상태 초기화 후 로드
+  currentFavorite = false;
+  updateFavoriteUI();
+  loadFavoriteStatus(docId);
 
   // 추천/비추천 카운트
   document.getElementById('sh-up-cnt').textContent = doc.upCount || 0;
@@ -1532,6 +1588,87 @@ function showToast(msg) {
   el.className = 'toast'; el.textContent = msg;
   document.body.appendChild(el);
   toastTimer = setTimeout(() => el.remove(), 2800);
+}
+
+/* ════ 즐겨찾기 ════ */
+function updateFavoriteUI() {
+  const btn = document.getElementById('sh-fav-btn');
+  if (!btn) return;
+  btn.textContent = currentFavorite ? '★' : '☆';
+  btn.classList.toggle('active', currentFavorite);
+}
+
+async function loadFavoriteStatus(docId) {
+  if (!currentUser) return;
+  const snap = await db.collection('favorites').doc(`${currentUser.uid}_${docId}`).get();
+  if (currentDocId !== docId) return;
+  currentFavorite = snap.exists;
+  updateFavoriteUI();
+}
+
+async function toggleFavorite() {
+  if (!currentDocId || !currentUser) return;
+  const favRef = db.collection('favorites').doc(`${currentUser.uid}_${currentDocId}`);
+  try {
+    if (currentFavorite) {
+      await favRef.delete();
+      currentFavorite = false;
+      showToast('즐겨찾기에서 제거됐습니다.');
+    } else {
+      await favRef.set({ uid: currentUser.uid, placeId: currentDocId, addedAt: firebase.firestore.FieldValue.serverTimestamp() });
+      currentFavorite = true;
+      showToast('⭐ 즐겨찾기에 추가됐습니다!');
+    }
+    updateFavoriteUI();
+  } catch(e) { showToast('처리 실패: ' + e.message); }
+}
+
+function openFavorites() {
+  document.getElementById('favorites-overlay').classList.add('open');
+  loadFavoritesList();
+}
+
+function closeFavorites() {
+  document.getElementById('favorites-overlay').classList.remove('open');
+}
+
+async function loadFavoritesList() {
+  const container = document.getElementById('favorites-list');
+  container.innerHTML = '<div class="admin-empty">불러오는 중...</div>';
+  try {
+    const snap = await db.collection('favorites').where('uid', '==', currentUser.uid).get();
+    if (!snap.docs.length) {
+      container.innerHTML = '<div class="admin-empty">아직 즐겨찾기한 식당이 없어요.<br>식당 상세에서 ☆ 버튼을 눌러보세요!</div>';
+      return;
+    }
+    const items = snap.docs.map(d => d.data());
+    items.sort((a, b) => (b.addedAt?.seconds || 0) - (a.addedAt?.seconds || 0));
+    const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보 없음' };
+    const cards = items.map(item => {
+      const place = allDocs.find(d => d.id === item.placeId);
+      if (!place) return '';
+      return `<div class="fav-item" onclick="goToPlace('${place.id}')">
+        <div class="fav-item-info">
+          <div class="fav-item-name">${place.name}</div>
+          <div class="fav-item-addr">${place.address || ''}</div>
+        </div>
+        <span class="status-badge ${place.corkageStatus || 'unknown'}" style="flex-shrink:0;font-size:0.75rem">
+          ${statusLabel[place.corkageStatus] || '정보 없음'}
+        </span>
+      </div>`;
+    }).filter(Boolean);
+    container.innerHTML = cards.length ? cards.join('') : '<div class="admin-empty">즐겨찾기 식당 정보를 찾을 수 없습니다.</div>';
+  } catch(e) {
+    container.innerHTML = `<div class="admin-empty">불러오기 실패: ${e.message}</div>`;
+  }
+}
+
+function goToPlace(docId) {
+  closeFavorites();
+  const doc = allDocs.find(d => d.id === docId);
+  if (!doc || !doc.lat || !doc.lng) { openSheet(docId); return; }
+  map.setView([doc.lat, doc.lng], 16);
+  setTimeout(() => openSheet(docId), 350);
 }
 
 /* ════ 공유 ════ */
