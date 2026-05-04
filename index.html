@@ -892,6 +892,7 @@ function showApp() {
   }
 
   if (!map) initMap();
+  setTimeout(() => map && map.invalidateSize(), 200);
   loadPlaces();
 }
 
