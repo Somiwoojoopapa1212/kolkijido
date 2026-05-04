@@ -565,37 +565,76 @@
     /* ══ 다크 모드 ══ */
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #111118; --white: #1E1E2C;
-        --text: #E4E4F0; --text2: #8888A8;
-        --shadow: rgba(0,0,0,0.5);
+        --purple:  #C478B4;
+        --purple2: #D4A8CA;
+        --purple3: #3D1035;
+        --bg:      #111118;
+        --white:   #1E1E2C;
+        --text:    #E4E4F0;
+        --text2:   #9090A8;
+        --shadow:  rgba(0,0,0,0.5);
       }
+      /* 지도: 타일 유지, 살짝만 어둡게 */
+      #map { filter: brightness(0.82) contrast(1.05); }
+
       #login-screen, #splash-screen, #kakao-notice {
         background: linear-gradient(160deg, #521848 0%, #1A0518 100%);
       }
-      #header { background: #3D1030; }
+      /* 헤더/필터는 원색 유지 (로고 배경) */
+      #header { background: #521848; }
       #filter-bar { background: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
       .filter-chip { background: var(--white); border-color: #332233; color: var(--text2); }
-      .filter-chip.active { background: var(--purple); color: white; border-color: var(--purple); }
-      #bottom-sheet, .form-place-card { background: var(--white); }
+      .filter-chip.active { background: #521848; color: white; border-color: #521848; }
+
+      /* 시트/패널 */
+      #bottom-sheet, .form-place-card { background: #1E1E2C; }
       #menu-panel { background: #1A0E18; }
       .menu-user { background: linear-gradient(135deg, #521848, #7B2E68); }
-      .sheet-divider, .menu-divider { background: #2A2A3C; }
-      .review-card { background: #1A1A28; border-color: #2A2A3C; }
-      .fav-item, .list-card, .report-card { background: #1E1E2C; }
-      .notice-item { border-bottom-color: #2A2A3C; }
-      .form-input, .form-textarea { background: #2A2A3C; color: var(--text); border-color: #3A3A55; }
+      .menu-fav-btn { color: var(--purple); }
+      .menu-logout  { color: #E87070; }
+      .sheet-divider, .menu-divider { background: #2A1828; }
+      .sheet-name   { color: var(--text); }
+      .info-value   { color: var(--text); }
+
+      /* 카드/리스트 */
+      .review-card { background: #1A1020; border-color: #2A1828; }
+      .fav-item, .list-card { background: #1E1E2C; }
+      .report-card  { background: #1E1E2C; }
+      .notice-item  { border-bottom-color: #2A1828; }
+      .list-sort-btn { background: var(--white); border-color: #332233; color: var(--purple); }
+      .list-sort-btn.active { background: #521848; color: white; border-color: #521848; }
+
+      /* 폼 입력 */
+      .form-input, .form-textarea {
+        background: #2A1828; color: var(--text); border-color: #3A2838;
+      }
+      .form-input::placeholder, .form-textarea::placeholder { color: var(--text2); }
       .login-input { background: rgba(255,255,255,0.1); }
       .alcohol-opt, .status-opt, .glass-opt,
-      .vote-choice, .btn-action { background: #2A2A3C; border-color: #3A3A55; }
+      .vote-choice, .btn-action {
+        background: #2A1828; border-color: #3A2838; color: var(--text2);
+      }
+      .btn-action.act-edit   { background: #2A1828; color: var(--purple); border-color: #3A2838; }
+      .btn-action.act-report { background: #2A1020; color: #E87070;       border-color: #3A1828; }
+
+      /* 오버레이 */
       #search-overlay, #form-overlay, #review-overlay,
       #favorites-overlay, #list-view { background: var(--bg); }
-      .search-overlay-header { background: var(--white); border-bottom-color: #2A2A3C; }
-      .search-input { background: var(--white); color: var(--text); border-color: #3A3A55; }
-      .search-item { border-bottom-color: #2A2A3C; }
-      .search-item:active { background: #2A2A3C; }
-      #view-toggle-btn, .list-sort-btn { background: var(--white); border-color: #3A3A55; }
-      .btn-fav-sheet, .btn-share-sheet, .btn-close-sheet { background: #2A2A3C; }
+      .search-overlay-header { background: var(--white); border-bottom-color: #2A1828; }
+      .search-input { background: var(--white); color: var(--text); border-color: #3A2838; }
+      .search-item  { border-bottom-color: #2A1828; }
+      .search-item:active { background: #2A1828; }
+      .search-item-name { color: var(--text); }
+      .search-item-cat  { color: var(--purple); }
+
+      /* 바텀 시트 버튼 */
+      #view-toggle-btn  { background: var(--white); border-color: #3A2838; color: var(--purple); }
+      .btn-fav-sheet, .btn-share-sheet,
+      .btn-close-sheet  { background: #2A1828; color: var(--purple); }
+
+      /* 관리자 */
       .admin-body { background: var(--bg); }
+      .admin-empty { color: var(--text2); }
     }
 
     /* ══ 추천/비추천 (action-bar로 통합) ══ */
@@ -764,7 +803,10 @@
 
 <!-- ════ 헤더 ════ -->
 <div id="header" class="hidden">
-  <div class="header-title">🍷 콜키지도</div>
+  <div class="header-title" style="display:flex;align-items:center;gap:7px">
+    <img src="icons/icon-192.png" style="width:26px;height:26px;border-radius:6px;flex-shrink:0" alt="">
+    콜키지도
+  </div>
   <div class="search-bar" onclick="openSearch()">
     <span class="search-icon">🔍</span>
     <span class="search-placeholder">식당 검색...</span>
@@ -1178,11 +1220,7 @@ function showApp() {
 /* ════ 지도 ════ */
 function initMap() {
   map = L.map('map', { zoomControl: false }).setView([37.5665, 126.9780], 13);
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  L.tileLayer(
-    isDark
-      ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
     { maxZoom: 19, attribution: '© OpenStreetMap © CARTO' }
   ).addTo(map);
   L.control.zoom({ position: 'bottomleft' }).addTo(map);
