@@ -876,6 +876,19 @@
       font-size: 0.88rem; cursor: pointer;
     }
 
+    /* ══ 시음 앱 기록 버튼 ══ */
+    .note-record-bar { display:flex; gap:8px; margin-top:10px; }
+    .btn-note-whisky {
+      flex:1; background:rgba(193,127,36,0.1); color:#c17f24;
+      border:1.5px solid rgba(193,127,36,0.35); border-radius:10px;
+      padding:10px; font-family:'Jua',sans-serif; font-size:0.88rem; cursor:pointer;
+    }
+    .btn-note-hanju {
+      flex:1; background:rgba(74,139,196,0.1); color:#2c6ba3;
+      border:1.5px solid rgba(74,139,196,0.35); border-radius:10px;
+      padding:10px; font-family:'Jua',sans-serif; font-size:0.88rem; cursor:pointer;
+    }
+
     /* ══ 다크 모드 보완 (일반 CSS 이후 선언된 요소들) ══ */
     @media (prefers-color-scheme: dark) {
       /* 후기 */
@@ -933,6 +946,8 @@
       /* 전화/예약 */
       .btn-call    { background: #1A3020; color: #52D98A; border-color: #2A5038; }
       .btn-reserve { background: #1A2035; color: #7AB8E8; border-color: #2A3858; }
+      .btn-note-whisky { background:rgba(193,127,36,0.15); color:#d4922a; border-color:rgba(193,127,36,0.4); }
+      .btn-note-hanju  { background:rgba(74,139,196,0.15); color:#6aaada; border-color:rgba(74,139,196,0.4); }
     }
   </style>
 </head>
@@ -1125,6 +1140,11 @@
         <span class="act-icon">🚨</span>
         <span>신고</span>
       </button>
+    </div>
+
+    <div class="note-record-bar">
+      <button class="btn-note-whisky" onclick="openNoteApp('whisky')">🥃 위스키 노트에 기록</button>
+      <button class="btn-note-hanju"  onclick="openNoteApp('hanju')">🍶 주향 노트에 기록</button>
     </div>
 
     <div class="sheet-divider"></div>
@@ -2275,6 +2295,16 @@ function callPhone() {
   if (!currentDocId) return;
   const doc = allDocs.find(d => d.id === currentDocId);
   if (doc?.phone) window.location.href = `tel:${doc.phone.replace(/[^0-9+]/g, '')}`;
+}
+
+function openNoteApp(app) {
+  if (!currentDocId) return;
+  const doc = allDocs.find(d => d.id === currentDocId);
+  if (!doc) return;
+  const base = app === 'whisky'
+    ? 'https://somiwoojoopapa1212.github.io/whisky-notes/'
+    : 'https://somiwoojoopapa1212.github.io/hanju-note/';
+  window.location.href = `${base}?place=${encodeURIComponent(doc.name)}`;
 }
 
 function openReservation() {
