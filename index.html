@@ -950,6 +950,19 @@
       box-shadow: 0 4px 16px rgba(82,24,72,0.25);
     }
     .sh-login-btn:active { opacity: 0.85; }
+    .sh-login-btn-email {
+      background: transparent;
+      color: var(--purple);
+      border: 1.5px solid var(--purple);
+      border-radius: 12px;
+      padding: 10px 32px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .sh-login-btn-email:active { opacity: 0.75; }
 
     /* ══ 애드핏 배너 ══ */
     .adfit-wrap {
@@ -1152,6 +1165,7 @@
     <div id="sh-login-prompt" class="sh-login-prompt hidden">
       <div class="sh-login-prompt-text">🔒 상세 정보는 로그인 후 확인할 수 있어요</div>
       <button class="sh-login-btn" onclick="signInGoogle()">Google로 로그인</button>
+      <button class="sh-login-btn-email" onclick="closeSheet(); document.getElementById('login-screen').style.display='flex';">이메일로 로그인</button>
     </div>
 
     <div class="sheet-name" id="sh-name">-</div>
