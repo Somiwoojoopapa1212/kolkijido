@@ -1048,7 +1048,7 @@
 
       /* 바텀시트 → 우측 사이드 패널 */
       #bottom-sheet {
-        top: 64px; bottom: 0;
+        top: 116px; bottom: 0;
         left: auto; right: 0;
         width: 400px;
         max-height: none;
@@ -1065,19 +1065,19 @@
 
       /* 목록 뷰 */
       #list-view {
-        top: 128px; left: 0; right: 0; bottom: 0;
+        top: 116px; left: 0; right: 0; bottom: 0;
         max-width: 600px; margin: 0 auto;
         padding: 16px 24px;
       }
 
-      /* FAB */
-      #fab { bottom: 40px; right: 440px; width: 56px; height: 56px; font-size: 1.5rem; }
+      /* FAB - 우측 하단 고정 */
+      #fab { bottom: 36px; right: 24px; width: 52px; height: 52px; font-size: 1.4rem; }
 
-      /* 내 위치 버튼 */
-      #locate-btn { bottom: 40px; right: 20px; }
+      /* 내 위치 버튼 - 좌측으로 이동 (사이드 패널과 겹치지 않게) */
+      #locate-btn { bottom: 36px; right: auto; left: 24px; }
 
       /* 뷰 토글 버튼 */
-      #view-toggle-btn { bottom: 40px; left: 50%; transform: translateX(-50%); }
+      #view-toggle-btn { bottom: 36px; left: 50%; transform: translateX(-50%); }
 
       /* 메뉴 드로어 */
       #menu-panel { width: 360px; }
