@@ -1026,6 +1026,78 @@
       .btn-note-whisky { background:rgba(193,127,36,0.15); color:#d4922a; border-color:rgba(193,127,36,0.4); }
       .btn-note-hanju  { background:rgba(74,139,196,0.15); color:#6aaada; border-color:rgba(74,139,196,0.4); }
     }
+
+    /* ════════════════════════════════
+       PC 레이아웃 (768px 이상)
+    ════════════════════════════════ */
+    @media (min-width: 768px) {
+      /* 헤더 */
+      #header { height: 64px; padding: 0 32px; gap: 16px; }
+      .header-title { font-size: 1.25rem; }
+      .search-bar { max-width: 480px; padding: 10px 16px; border-radius: 14px; }
+      .search-bar .search-placeholder { font-size: 0.95rem; }
+      .hamburger-btn { width: 40px; height: 40px; font-size: 1.2rem; }
+      #admin-btn { width: 40px; height: 40px; }
+
+      /* 필터 바 */
+      #filter-bar { top: 64px; padding: 12px 32px; gap: 12px; }
+      .filter-btn { padding: 9px 18px; font-size: 0.88rem; }
+
+      /* 지도 */
+      #map { top: 112px; }
+
+      /* 바텀시트 → 우측 사이드 패널 */
+      #bottom-sheet {
+        top: 64px; bottom: 0;
+        left: auto; right: 0;
+        width: 400px;
+        max-height: none;
+        border-radius: 0;
+        transform: translateX(100%);
+        box-shadow: -4px 0 24px rgba(0,0,0,0.12);
+      }
+      #bottom-sheet.open { transform: translateX(0); }
+      #sheet-header { padding: 16px 20px 8px; min-height: auto; }
+      #sheet-header .sheet-handle { display: none; }
+      #bottom-sheet-body { flex: 1; overflow-y: auto; min-height: 0; }
+      .sheet-content { padding: 0 24px 40px; }
+      .sheet-name { font-size: 1.5rem; }
+
+      /* 목록 뷰 */
+      #list-view {
+        top: 128px; left: 0; right: 0; bottom: 0;
+        max-width: 600px; margin: 0 auto;
+        padding: 16px 24px;
+      }
+
+      /* FAB */
+      #fab { bottom: 40px; right: 440px; width: 56px; height: 56px; font-size: 1.5rem; }
+
+      /* 내 위치 버튼 */
+      #locate-btn { bottom: 40px; right: 20px; }
+
+      /* 뷰 토글 버튼 */
+      #view-toggle-btn { bottom: 40px; left: 50%; transform: translateX(-50%); }
+
+      /* 메뉴 드로어 */
+      #menu-panel { width: 360px; }
+
+      /* 로그인 화면 */
+      #login-screen { background: rgba(0,0,0,0.5); }
+      #login-screen > div {
+        max-width: 420px; width: 100%;
+        border-radius: 24px; margin: auto;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      }
+
+      /* 각종 오버레이 패널 */
+      #favorites-overlay, #admin-overlay, #my-places-overlay {
+        max-width: 600px; left: 50%; transform: translateX(-50%);
+      }
+      #favorites-overlay.open, #admin-overlay.open, #my-places-overlay.open {
+        transform: translateX(-50%);
+      }
+    }
   </style>
 
   <script type="application/ld+json">
@@ -1942,6 +2014,8 @@ function closeSheet() {
   setTimeout(() => { document.getElementById('bottom-sheet-body').scrollTop = 0; }, 360);
 }
 
+function isPC() { return window.innerWidth >= 768; }
+
 /* ════ 바텀 시트 스와이프 닫기 ════ */
 (function() {
   const sheet  = document.getElementById('bottom-sheet');
@@ -1955,6 +2029,7 @@ function closeSheet() {
     dragging = false;
   }
   function onMove(e) {
+    if (isPC()) return;
     const dy = (e.touches ? e.touches[0] : e).clientY - startY;
     if (startScroll > 0 || dy <= 0) return;
     dragging = true;
