@@ -156,16 +156,7 @@
     #map { position: fixed; top: 104px; left: 0; right: 0; bottom: 0; z-index: 1; }
 
     /* ══ 위치 버튼 ══ */
-    #locate-btn {
-      position: fixed; bottom: 100px; right: 20px; z-index: 500;
-      width: 46px; height: 46px; border-radius: 50%;
-      background: white; border: 2px solid #E8D5F5;
-      font-size: 1.2rem; cursor: pointer;
-      box-shadow: 0 2px 14px rgba(0,0,0,0.15);
-      display: flex; align-items: center; justify-content: center;
-      transition: transform 0.15s;
-    }
-    #locate-btn:active { transform: scale(0.92); }
+    /* locate-btn → speed-dial 내부로 이동, 기존 위치 스타일 제거 */
     @keyframes locatePulse {
       0%,100% { box-shadow: 0 0 0 0 rgba(66,133,244,0.4); }
       50%     { box-shadow: 0 0 0 8px rgba(66,133,244,0); }
@@ -177,16 +168,48 @@
       animation: locatePulse 1.8s infinite;
     }
 
-    /* ══ FAB ══ */
-    #fab {
-      position: fixed; bottom: 28px; right: 20px; z-index: 500;
+    /* ══ Speed Dial FAB ══ */
+    #sd-backdrop {
+      display: none; position: fixed; inset: 0; z-index: 498;
+    }
+    #sd-backdrop.open { display: block; }
+    #speed-dial {
+      position: fixed; bottom: 28px; right: 20px; z-index: 499;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 14px;
+    }
+    #sd-trigger {
       width: 58px; height: 58px; border-radius: 50%;
       background: linear-gradient(135deg, var(--purple), var(--purple2));
       border: none; color: white; font-size: 1.8rem; cursor: pointer;
-      box-shadow: 0 4px 20px var(--shadow); display: flex; align-items: center; justify-content: center;
-      transition: transform 0.15s;
+      box-shadow: 0 4px 20px var(--shadow);
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.25s; flex-shrink: 0;
     }
-    #fab:active { transform: scale(0.92); }
+    #speed-dial.open #sd-trigger { transform: rotate(45deg); }
+    #sd-items {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+      opacity: 0; pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity 0.2s, transform 0.2s;
+    }
+    #speed-dial.open #sd-items { opacity: 1; pointer-events: auto; transform: translateY(0); }
+    .sd-item { display: flex; align-items: center; gap: 10px; }
+    .sd-label {
+      background: rgba(30,20,40,0.82); color: white; backdrop-filter: blur(4px);
+      padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    /* 서브 버튼 공통 */
+    #speed-dial #fab, #speed-dial #locate-btn, #speed-dial #view-toggle-btn {
+      position: static; bottom: auto; right: auto; left: auto; top: auto;
+      width: 46px; height: 46px; border-radius: 50%; border: none;
+      background: white; box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+      font-size: 1.1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.15s; flex-shrink: 0; padding: 0;
+    }
+    #speed-dial #fab { background: linear-gradient(135deg, var(--purple), var(--purple2)); color: white; }
+    #speed-dial #fab:active, #speed-dial #locate-btn:active, #speed-dial #view-toggle-btn:active { transform: scale(0.92); }
 
     /* ══ 바텀 시트 (식당 상세) ══ */
     #bottom-sheet {
@@ -582,15 +605,7 @@
     .login-error-msg { color: rgba(255,200,200,1); font-size: 0.82rem; text-align: center; min-height: 18px; }
 
     /* ══ 뷰 토글 버튼 ══ */
-    #view-toggle-btn {
-      position: fixed; bottom: 100px; left: 20px; z-index: 500;
-      background: white; border: 2px solid #E8D5F5; border-radius: 20px;
-      padding: 9px 16px; box-shadow: 0 2px 14px rgba(0,0,0,0.15);
-      font-family: 'Pretendard', sans-serif; font-size: 0.82rem;
-      color: var(--purple); cursor: pointer;
-      display: flex; align-items: center; gap: 6px; transition: transform 0.15s;
-    }
-    #view-toggle-btn:active { transform: scale(0.95); }
+    /* view-toggle-btn → speed-dial 내부로 이동, 기존 위치 스타일 제거 */
 
     /* ══ 목록 뷰 ══ */
     #list-view {
@@ -702,7 +717,9 @@
       .search-item-cat  { color: var(--purple); }
 
       /* 바텀 시트 버튼 */
-      #view-toggle-btn  { background: var(--white); border-color: #3A2838; color: var(--purple); }
+      #speed-dial #view-toggle-btn,
+      #speed-dial #locate-btn { background: #2A1828; }
+      .sd-label { background: rgba(60,30,50,0.92); }
       .btn-fav-sheet, .btn-share-sheet,
       .btn-close-sheet  { background: #2A1828; color: var(--purple); }
 
@@ -1070,15 +1087,11 @@
         padding: 16px 24px;
       }
 
-      /* FAB + 내위치 - 좌측 버튼 묶음 (줌 컨트롤 위) */
-      #fab {
-        bottom: 200px; right: auto; left: 24px;
-        width: 52px; height: 52px; font-size: 1.4rem;
-      }
-      #locate-btn { bottom: 140px; right: auto; left: 24px; }
-
-      /* 뷰 토글 버튼 */
-      #view-toggle-btn { bottom: 36px; left: 50%; transform: translateX(-50%); }
+      /* Speed Dial - 좌측 하단 (줌 컨트롤 위) */
+      #speed-dial { bottom: 140px; right: auto; left: 24px; align-items: flex-start; }
+      #sd-items { align-items: flex-start; }
+      .sd-item { flex-direction: row-reverse; }
+      #speed-dial.open #sd-trigger { transform: rotate(45deg); }
 
       /* 메뉴 드로어 */
       #menu-panel { width: 360px; }
@@ -1246,14 +1259,25 @@
 <!-- ════ 목록 뷰 ════ -->
 <div id="list-view"></div>
 
-<!-- ════ 뷰 토글 버튼 ════ -->
-<button id="view-toggle-btn" class="hidden" onclick="toggleView()">📋 목록 보기</button>
-
-<!-- ════ 내 위치 버튼 ════ -->
-<button id="locate-btn" class="hidden" onclick="locateMe()" title="내 위치로 이동">📍</button>
-
-<!-- ════ FAB ════ -->
-<button id="fab" class="hidden" onclick="openAddFlow()">+</button>
+<!-- ════ Speed Dial FAB ════ -->
+<div id="sd-backdrop" onclick="closeSpeedDial()"></div>
+<div id="speed-dial" class="hidden">
+  <div id="sd-items">
+    <div class="sd-item" id="sd-item-add">
+      <span class="sd-label">식당 등록</span>
+      <button id="fab" onclick="openAddFlow(); closeSpeedDial()">➕</button>
+    </div>
+    <div class="sd-item" id="sd-item-locate">
+      <span class="sd-label">내 위치</span>
+      <button id="locate-btn" onclick="locateMe(); closeSpeedDial()">📍</button>
+    </div>
+    <div class="sd-item" id="sd-item-view">
+      <span class="sd-label" id="sd-view-label">목록 보기</span>
+      <button id="view-toggle-btn" onclick="toggleView(); closeSpeedDial()">📋</button>
+    </div>
+  </div>
+  <button id="sd-trigger" onclick="toggleSpeedDial()">＋</button>
+</div>
 
 <!-- ════ 바텀 시트 (상세) ════ -->
 <div id="bottom-sheet">
@@ -1778,8 +1802,8 @@ function signOut() {
 function showApp(user) {
   document.getElementById('login-screen').style.display = 'none';
 
-  // 비로그인도 지도·헤더·필터 표시
-  ['header','filter-bar','map','locate-btn','view-toggle-btn'].forEach(id => {
+  // 비로그인도 지도·헤더·필터·스피드다이얼 표시
+  ['header','filter-bar','map','speed-dial'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('hidden');
   });
@@ -1787,18 +1811,18 @@ function showApp(user) {
   updateMenuUser();
 
   if (user) {
-    // 로그인 상태
-    const fab = document.getElementById('fab');
-    if (fab) fab.classList.remove('hidden');
+    // 로그인 상태 - 식당 등록 서브버튼 표시
+    const sdItemAdd = document.getElementById('sd-item-add');
+    if (sdItemAdd) sdItemAdd.style.display = '';
     if (user.email === ADMIN_EMAIL) {
       const adminBtn = document.getElementById('admin-btn');
       if (adminBtn) adminBtn.classList.remove('hidden');
     }
     checkUnreadNotices();
   } else {
-    // 비로그인: FAB 숨김
-    const fab = document.getElementById('fab');
-    if (fab) fab.classList.add('hidden');
+    // 비로그인: 식당 등록 서브버튼 숨김
+    const sdItemAdd = document.getElementById('sd-item-add');
+    if (sdItemAdd) sdItemAdd.style.display = 'none';
   }
 
   if (!map) initMap();
@@ -2017,6 +2041,17 @@ function closeSheet() {
 }
 
 function isPC() { return window.innerWidth >= 768; }
+
+function toggleSpeedDial() {
+  const dial = document.getElementById('speed-dial');
+  const backdrop = document.getElementById('sd-backdrop');
+  const isOpen = dial.classList.toggle('open');
+  backdrop.classList.toggle('open', isOpen);
+}
+function closeSpeedDial() {
+  document.getElementById('speed-dial').classList.remove('open');
+  document.getElementById('sd-backdrop').classList.remove('open');
+}
 
 /* ════ 바텀 시트 스와이프 닫기 ════ */
 (function() {
@@ -2615,26 +2650,29 @@ function isNew(doc) {
 /* ════ 목록 뷰 ════ */
 function toggleView() {
   currentView = currentView === 'map' ? 'list' : 'map';
-  const listEl   = document.getElementById('list-view');
-  const mapEl    = document.getElementById('map');
-  const btn      = document.getElementById('view-toggle-btn');
-  const locateEl = document.getElementById('locate-btn');
-  const fabEl    = document.getElementById('fab');
+  const listEl      = document.getElementById('list-view');
+  const mapEl       = document.getElementById('map');
+  const btn         = document.getElementById('view-toggle-btn');
+  const viewLabel   = document.getElementById('sd-view-label');
+  const sdItemAdd   = document.getElementById('sd-item-add');
+  const sdItemLocate= document.getElementById('sd-item-locate');
 
   if (currentView === 'list') {
     listEl.classList.add('active');
     mapEl.style.visibility = 'hidden';
-    locateEl.style.display = 'none';
-    fabEl.style.display    = 'none';
-    btn.innerHTML = '🗺️ 지도 보기';
+    if (sdItemAdd)    sdItemAdd.style.display    = 'none';
+    if (sdItemLocate) sdItemLocate.style.display = 'none';
+    btn.textContent = '🗺️';
+    if (viewLabel) viewLabel.textContent = '지도 보기';
     renderListView();
     closeSheet();
   } else {
     listEl.classList.remove('active');
     mapEl.style.visibility = '';
-    locateEl.style.display = '';
-    fabEl.style.display    = '';
-    btn.innerHTML = '📋 목록 보기';
+    if (sdItemAdd && currentUser)    sdItemAdd.style.display    = '';
+    if (sdItemLocate) sdItemLocate.style.display = '';
+    btn.textContent = '📋';
+    if (viewLabel) viewLabel.textContent = '목록 보기';
     setTimeout(() => map && map.invalidateSize(), 100);
   }
 }
