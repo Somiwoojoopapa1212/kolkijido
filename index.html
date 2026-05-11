@@ -194,11 +194,16 @@
       background: white; border-radius: 24px 24px 0 0;
       box-shadow: 0 -4px 30px rgba(0,0,0,0.15);
       transform: translateY(100%); transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+      display: flex; flex-direction: column; max-height: 50vh;
     }
     #bottom-sheet.open { transform: translateY(0); }
-    #bottom-sheet-body { max-height: 50vh; overflow-y: auto; }
-    .sheet-handle { width: 40px; height: 4px; background: #E0D0F0; border-radius: 2px; margin: 12px auto 0; }
-    .sheet-content { padding: 16px 20px 32px; position: relative; }
+    #sheet-header {
+      flex-shrink: 0; position: relative; padding: 0 16px;
+      display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+    }
+    #bottom-sheet-body { flex: 1; overflow-y: auto; min-height: 0; }
+    .sheet-handle { width: 40px; height: 4px; background: #E0D0F0; border-radius: 2px; margin: 12px auto 8px; }
+    .sheet-content { padding: 0 20px 32px; position: relative; }
     .sheet-name { font-family: 'Pretendard', sans-serif; font-size: 1.35rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
     .sheet-addr {
       font-size: 0.82rem; color: var(--text2); margin-bottom: 16px;
@@ -242,24 +247,15 @@
     .btn-action.vote-down.active{ background: #FDEDEC; border-color: var(--no);   color: var(--no); }
     .btn-action.act-edit   { border-color: var(--purple2); color: var(--purple); background: #F5EEFF; }
     .btn-action.act-report { border-color: #FADADD; color: var(--no); background: #FDF0F0; }
-    .btn-close-sheet {
-      position: absolute; top: 12px; right: 16px;
+    #sheet-header {
+      min-height: 48px;
+    }
+    .btn-close-sheet, .btn-share-sheet, .btn-fav-sheet {
       background: #F0E8FF; border: none; border-radius: 50%; width: 30px; height: 30px;
       cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
-      color: var(--purple);
+      color: var(--purple); flex-shrink: 0;
     }
-    .btn-share-sheet {
-      position: absolute; top: 12px; right: 52px;
-      background: #F0E8FF; border: none; border-radius: 50%; width: 30px; height: 30px;
-      cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
-      color: var(--purple);
-    }
-    .btn-fav-sheet {
-      position: absolute; top: 12px; right: 88px;
-      background: #F0E8FF; border: none; border-radius: 50%; width: 30px; height: 30px;
-      cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
-      color: var(--text2); transition: all 0.15s;
-    }
+    .btn-fav-sheet { color: var(--text2); font-size: 1rem; transition: all 0.15s; }
     .btn-fav-sheet.active { background: #FEF9E7; color: #F1C40F; }
 
     /* ══ 즐겨찾기 오버레이 ══ */
@@ -1187,16 +1183,18 @@
 
 <!-- ════ 바텀 시트 (상세) ════ -->
 <div id="bottom-sheet">
-  <button class="btn-fav-sheet" id="sh-fav-btn" onclick="toggleFavorite()">☆</button>
-  <button class="btn-share-sheet" onclick="sharePlace()" aria-label="공유">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-    </svg>
-  </button>
-  <button class="btn-close-sheet" onclick="closeSheet()">✕</button>
+  <div id="sheet-header">
+    <div class="sheet-handle" style="position:absolute;left:50%;transform:translateX(-50%);top:10px;margin:0"></div>
+    <button class="btn-fav-sheet" id="sh-fav-btn" onclick="toggleFavorite()">☆</button>
+    <button class="btn-share-sheet" onclick="sharePlace()" aria-label="공유">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+    </button>
+    <button class="btn-close-sheet" onclick="closeSheet()">✕</button>
+  </div>
   <div id="bottom-sheet-body">
-  <div class="sheet-handle"></div>
   <div class="sheet-content">
 
     <!-- ════ 비로그인 오버레이 ════ -->
@@ -1946,34 +1944,35 @@ function closeSheet() {
 
 /* ════ 바텀 시트 스와이프 닫기 ════ */
 (function() {
-  const sheet = document.getElementById('bottom-sheet');
-  const body  = document.getElementById('bottom-sheet-body');
+  const sheet  = document.getElementById('bottom-sheet');
+  const body   = document.getElementById('bottom-sheet-body');
+  const header = document.getElementById('sheet-header');
   let startY = 0, startScroll = 0, dragging = false;
 
-  body.addEventListener('touchstart', e => {
-    startY = e.touches[0].clientY;
+  function onStart(e) {
+    startY = (e.touches ? e.touches[0] : e).clientY;
     startScroll = body.scrollTop;
     dragging = false;
-  }, { passive: true });
-
-  body.addEventListener('touchmove', e => {
-    const dy = e.touches[0].clientY - startY;
+  }
+  function onMove(e) {
+    const dy = (e.touches ? e.touches[0] : e).clientY - startY;
     if (startScroll > 0 || dy <= 0) return;
     dragging = true;
     sheet.style.transition = 'none';
     sheet.style.transform = `translateY(${Math.max(0, dy)}px)`;
-  }, { passive: true });
-
-  body.addEventListener('touchend', e => {
+  }
+  function onEnd(e) {
     if (!dragging) return;
-    const dy = e.changedTouches[0].clientY - startY;
+    const dy = (e.changedTouches ? e.changedTouches[0] : e).clientY - startY;
     sheet.style.transition = '';
-    if (dy > 80) {
-      closeSheet();
-    } else {
-      sheet.style.transform = '';
-    }
+    if (dy > 80) { closeSheet(); } else { sheet.style.transform = ''; }
     dragging = false;
+  }
+
+  [body, header].forEach(el => {
+    el.addEventListener('touchstart', onStart, { passive: true });
+    el.addEventListener('touchmove',  onMove,  { passive: true });
+    el.addEventListener('touchend',   onEnd);
   });
 })();
 
