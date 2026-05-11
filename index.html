@@ -3305,18 +3305,23 @@ function viewPhoto(url) {
 /* ════ SW + 자동 업데이트 ════ */
 if ('serviceWorker' in navigator) {
   let pendingSW = null;
+  let swReg = null;
   navigator.serviceWorker.register('sw.js').then(reg => {
+    swReg = reg;
     reg.update();
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
       newSW.addEventListener('statechange', () => {
         if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
           pendingSW = newSW;
-          // 지도 앱은 언제든 즉시 자동 업데이트
           newSW.postMessage({ type: 'SKIP_WAITING' });
         }
       });
     });
+  });
+  // 앱이 포그라운드로 돌아올 때마다 업데이트 체크
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && swReg) swReg.update();
   });
   navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
   window.applyUpdate = function() {
