@@ -1105,26 +1105,32 @@
 <!-- ════ 메뉴 드로어 ════ -->
 <div id="menu-overlay" onclick="closeMenu()"></div>
 <div id="menu-panel">
-  <div class="menu-user">
+  <!-- 로그인 상태 -->
+  <div class="menu-user" id="menu-user-area">
     <div class="menu-avatar-lg" id="menu-avatar-lg">?</div>
     <div class="menu-user-name"  id="menu-user-name">-</div>
     <div class="menu-user-email" id="menu-user-email">-</div>
+  </div>
+  <!-- 비로그인 상태 -->
+  <div class="menu-user menu-guest-area hidden" id="menu-guest-area" onclick="closeMenu(); signInGoogle()">
+    <div class="menu-avatar-lg">👤</div>
+    <div class="menu-user-name">로그인 해주세요</div>
+    <div class="menu-user-email">탭하여 Google 로그인</div>
   </div>
   <div class="menu-section">
     <div class="menu-section-title">📢 공지사항</div>
     <div id="menu-notices"><div class="notice-empty">불러오는 중...</div></div>
   </div>
   <div class="menu-footer">
-    <button class="menu-fav-btn" onclick="openFavorites(); closeMenu()">⭐ 즐겨찾기</button>
+    <button class="menu-fav-btn" id="menu-btn-fav" onclick="openFavorites(); closeMenu()">⭐ 즐겨찾기</button>
     <div style="height:1px;background:#F0E8FF"></div>
-    <button class="menu-fav-btn" onclick="openMyPlaces(); closeMenu()">🏠 내가 등록한 식당</button>
-    <div style="height:1px;background:#F0E8FF"></div>
+    <button class="menu-fav-btn" id="menu-btn-myplaces" onclick="openMyPlaces(); closeMenu()">🏠 내가 등록한 식당</button>
     <div style="height:1px;background:#F0E8FF"></div>
     <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/whisky-notes/'">🥃 위스키 노트</button>
     <div style="height:1px;background:#F0E8FF"></div>
     <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/hanju-note/'">🍶 주향 노트</button>
     <div style="height:1px;background:#F0E8FF"></div>
-    <button class="menu-logout" onclick="signOut()">🚪 로그아웃</button>
+    <button class="menu-logout" id="menu-btn-logout" onclick="signOut()">🚪 로그아웃</button>
   </div>
 </div>
 
@@ -1667,6 +1673,8 @@ function showApp(user) {
     if (el) el.classList.remove('hidden');
   });
 
+  updateMenuUser();
+
   if (user) {
     // 로그인 상태
     const fab = document.getElementById('fab');
@@ -1675,7 +1683,6 @@ function showApp(user) {
       const adminBtn = document.getElementById('admin-btn');
       if (adminBtn) adminBtn.classList.remove('hidden');
     }
-    updateMenuUser();
     checkUnreadNotices();
   } else {
     // 비로그인: FAB 숨김
@@ -2862,16 +2869,35 @@ function closeMenu() {
 }
 
 function updateMenuUser() {
-  if (!currentUser) return;
-  const nameEl  = document.getElementById('menu-user-name');
-  const emailEl = document.getElementById('menu-user-email');
-  const avatarEl = document.getElementById('menu-avatar-lg');
-  nameEl.textContent  = currentUser.displayName || '사용자';
-  emailEl.textContent = currentUser.email || '';
-  if (currentUser.photoURL) {
-    avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
+  const userArea  = document.getElementById('menu-user-area');
+  const guestArea = document.getElementById('menu-guest-area');
+  const logoutBtn = document.getElementById('menu-btn-logout');
+  const favBtn    = document.getElementById('menu-btn-fav');
+  const myBtn     = document.getElementById('menu-btn-myplaces');
+
+  if (currentUser) {
+    userArea.classList.remove('hidden');
+    guestArea.classList.add('hidden');
+    if (logoutBtn) logoutBtn.classList.remove('hidden');
+    if (favBtn)    favBtn.classList.remove('hidden');
+    if (myBtn)     myBtn.classList.remove('hidden');
+
+    const nameEl   = document.getElementById('menu-user-name');
+    const emailEl  = document.getElementById('menu-user-email');
+    const avatarEl = document.getElementById('menu-avatar-lg');
+    nameEl.textContent  = currentUser.displayName || '사용자';
+    emailEl.textContent = currentUser.email || '';
+    if (currentUser.photoURL) {
+      avatarEl.innerHTML = `<img src="${currentUser.photoURL}" alt="">`;
+    } else {
+      avatarEl.textContent = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
+    }
   } else {
-    avatarEl.textContent = (currentUser.displayName || currentUser.email || 'U')[0].toUpperCase();
+    userArea.classList.add('hidden');
+    guestArea.classList.remove('hidden');
+    if (logoutBtn) logoutBtn.classList.add('hidden');
+    if (favBtn)    favBtn.classList.add('hidden');
+    if (myBtn)     myBtn.classList.add('hidden');
   }
 }
 
