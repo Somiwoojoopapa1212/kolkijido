@@ -1113,7 +1113,7 @@
 
 <!-- ════ 헤더 ════ -->
 <div id="header" class="hidden">
-  <div class="header-title" style="display:flex;align-items:center;gap:7px">
+  <div class="header-title" style="display:flex;align-items:center;gap:7px;cursor:pointer" onclick="goHome()">
     <img src="icons/icon-192.png" style="width:26px;height:26px;border-radius:6px;flex-shrink:0" alt="">
     콜키지도
   </div>
@@ -1138,10 +1138,10 @@
     <div class="menu-user-email" id="menu-user-email">-</div>
   </div>
   <!-- 비로그인 상태 -->
-  <div class="menu-user menu-guest-area hidden" id="menu-guest-area" onclick="closeMenu(); signInGoogle()">
+  <div class="menu-user menu-guest-area hidden" id="menu-guest-area" onclick="closeMenu(); document.getElementById('login-screen').style.display='flex'">
     <div class="menu-avatar-lg">👤</div>
     <div class="menu-user-name">로그인 해주세요</div>
-    <div class="menu-user-email">탭하여 Google 로그인</div>
+    <div class="menu-user-email">탭하여 로그인</div>
   </div>
   <div class="menu-section">
     <div class="menu-section-title">📢 공지사항</div>
@@ -2005,6 +2005,20 @@ function closeSearch() {
   document.getElementById('search-overlay').classList.remove('open');
   document.getElementById('search-input').value = '';
   document.getElementById('search-results').innerHTML = '';
+}
+
+function goHome() {
+  closeSheet();
+  closeSearch();
+  closeMenu();
+  setFilter('all');
+  activeArea = '전체';
+  const areaBtn = document.getElementById('area-filter-btn');
+  if (areaBtn) areaBtn.innerHTML = `📍 지역: 전체 <span class="f-arrow">▾</span>`;
+  if (areaBtn) areaBtn.classList.remove('active');
+  renderMarkers();
+  if (currentView === 'list') renderListView();
+  map.flyTo([37.5665, 126.9780], 13, { duration: 0.8 });
 }
 
 function onSearchInput(val) {
