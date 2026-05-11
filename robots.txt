@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://somiwoojoopapa1212.github.io/kolkijido/sitemap.xml
