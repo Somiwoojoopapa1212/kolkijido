@@ -1606,15 +1606,31 @@ let formAlcohol   = new Set();
 let formGlass     = '';
 
 /* ════ 인증 ════ */
+let appInitialized = false;
 auth.onAuthStateChanged(user => {
   const splash = document.getElementById('splash-screen');
   const hideSplash = () => {
     splash.classList.add('fade-out');
     setTimeout(() => splash.classList.add('hidden'), 420);
   };
+  const wasLoggedIn = !!currentUser;
   currentUser = user || null;
-  showApp(user);
-  hideSplash();
+
+  if (!appInitialized) {
+    // 최초 진입
+    appInitialized = true;
+    showApp(user);
+    hideSplash();
+  } else if (wasLoggedIn && !user) {
+    // 로그아웃: 바텀 시트·메뉴 닫고 UI 갱신
+    closeSheet();
+    closeMenu();
+    showApp(null);
+    showToast('로그아웃 되었습니다.');
+  } else if (!wasLoggedIn && user) {
+    // 로그인: UI 갱신
+    showApp(user);
+  }
 });
 
 async function signInGoogle() {
