@@ -917,6 +917,34 @@
       padding:10px; font-family:'Jua',sans-serif; font-size:0.88rem; cursor:pointer;
     }
 
+    /* ══ 비로그인 유도 배너 ══ */
+    .sh-login-prompt {
+      background: linear-gradient(135deg, #f5eeff, #ede0ff);
+      border: 1.5px solid #d4a8e8;
+      border-radius: 14px;
+      padding: 18px 16px;
+      text-align: center;
+      margin: 12px 0;
+    }
+    .sh-login-prompt-text {
+      font-size: 0.9rem;
+      color: var(--purple);
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .sh-login-btn {
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 24px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .sh-login-btn:active { opacity: 0.85; }
+
     /* ══ 애드핏 배너 ══ */
     .adfit-wrap {
       display: flex; justify-content: center; align-items: center;
@@ -1181,6 +1209,17 @@
       <button class="btn-note-hanju"  onclick="openNoteApp('hanju')">🍶 주향 노트에 기록</button>
     </div>
 
+    <!-- ════ 비로그인 유도 배너 ════ -->
+    <div id="sh-login-prompt" class="sh-login-prompt hidden">
+      <div class="sh-login-prompt-text">
+        🔒 상세 정보는 로그인 후 확인할 수 있어요
+      </div>
+      <button class="sh-login-btn" onclick="signInGoogle()">Google로 로그인</button>
+    </div>
+
+    <!-- ════ 로그인 후 표시 영역 ════ -->
+    <div id="sh-detail-area">
+
     <div class="sheet-divider"></div>
 
     <!-- ════ 카카오 애드핏 배너 ════ -->
@@ -1198,6 +1237,8 @@
       <button class="btn-write-review" onclick="openReview()">후기 작성</button>
     </div>
     <div id="sh-reviews"></div>
+
+    </div><!-- /#sh-detail-area -->
   </div>
 </div>
 
@@ -1552,20 +1593,9 @@ auth.onAuthStateChanged(user => {
     splash.classList.add('fade-out');
     setTimeout(() => splash.classList.add('hidden'), 420);
   };
-  if (user) {
-    currentUser = user;
-    showApp();
-    hideSplash();
-  } else {
-    currentUser = null;
-    if (isKakaoBrowser()) {
-      document.getElementById('kakao-notice').classList.remove('hidden');
-    } else {
-      document.getElementById('login-screen').style.display = 'flex';
-    }
-    ['header','filter-bar','map','fab','locate-btn'].forEach(id => document.getElementById(id).classList.add('hidden'));
-    hideSplash();
-  }
+  currentUser = user || null;
+  showApp(user);
+  hideSplash();
 });
 
 async function signInGoogle() {
@@ -1593,20 +1623,43 @@ function signOut() {
   if (confirm('로그아웃 하시겠어요?')) auth.signOut();
 }
 
-function showApp() {
+function showApp(user) {
   document.getElementById('login-screen').style.display = 'none';
-  ['header','filter-bar','map','fab','locate-btn','view-toggle-btn'].forEach(id => document.getElementById(id).classList.remove('hidden'));
 
-  // 관리자 버튼 표시
-  if (currentUser.email === ADMIN_EMAIL) {
-    document.getElementById('admin-btn').classList.remove('hidden');
+  // 비로그인도 지도·헤더·필터 표시
+  ['header','filter-bar','map','locate-btn','view-toggle-btn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('hidden');
+  });
+
+  if (user) {
+    // 로그인 상태
+    const fab = document.getElementById('fab');
+    if (fab) fab.classList.remove('hidden');
+    if (user.email === ADMIN_EMAIL) {
+      const adminBtn = document.getElementById('admin-btn');
+      if (adminBtn) adminBtn.classList.remove('hidden');
+    }
+    updateMenuUser();
+    checkUnreadNotices();
+  } else {
+    // 비로그인: FAB 숨김
+    const fab = document.getElementById('fab');
+    if (fab) fab.classList.add('hidden');
   }
 
-  updateMenuUser();
-  checkUnreadNotices();
   if (!map) initMap();
   setTimeout(() => map && map.invalidateSize(), 200);
-  loadPlaces();
+  if (!allDocs.length) loadPlaces();
+}
+
+function requireLogin(msg) {
+  if (currentUser) return true;
+  showToast(msg || '로그인이 필요한 기능입니다.');
+  setTimeout(() => {
+    document.getElementById('login-screen').style.display = 'flex';
+  }, 600);
+  return false;
 }
 
 /* ════ 지도 ════ */
@@ -1713,16 +1766,29 @@ function openSheet(docId) {
   document.getElementById('sh-name').innerHTML = doc.name + newBadge;
   document.getElementById('sh-addr').textContent = '📍 ' + (doc.address || '-');
 
+  // 콜키지 상태 뱃지 (비로그인도 표시)
+  const statusEl = document.getElementById('sh-status');
+  statusEl.textContent = STATUS_LABELS[doc.corkageStatus] || '정보 없음';
+  statusEl.className = 'status-badge ' + (doc.corkageStatus || 'unknown');
+
+  // 비로그인: 상세 영역 숨기고 로그인 유도 표시 후 종료
+  const loginPrompt = document.getElementById('sh-login-prompt');
+  const detailArea  = document.getElementById('sh-detail-area');
+  if (!currentUser) {
+    loginPrompt.classList.remove('hidden');
+    detailArea.classList.add('hidden');
+    document.getElementById('bottom-sheet').classList.add('open');
+    return;
+  }
+  loginPrompt.classList.add('hidden');
+  detailArea.classList.remove('hidden');
+
   // 카테고리
   const catRow = document.getElementById('sh-category-row');
   if (doc.category) {
     document.getElementById('sh-category').textContent = doc.category;
     catRow.classList.remove('hidden');
   } else { catRow.classList.add('hidden'); }
-
-  // 콜키지 상태 뱃지
-  const statusEl = document.getElementById('sh-status');
-  statusEl.textContent = STATUS_LABELS[doc.corkageStatus] || '정보 없음';
   statusEl.className = 'status-badge ' + (doc.corkageStatus || 'unknown');
 
   // 비용
@@ -1856,6 +1922,7 @@ function openAddSearch() {
 }
 
 function openAddFlow() {
+  if (!requireLogin('식당 등록은 로그인 후 이용할 수 있어요.')) return;
   selectedPlace = null;
   openAddSearch();
 }
@@ -2977,6 +3044,7 @@ async function castVote(vote) {
 
 /* ════ 후기 ════ */
 function openReview() {
+  if (!requireLogin('후기 작성은 로그인 후 이용할 수 있어요.')) return;
   if (!currentDocId) return;
   const doc = allDocs.find(d => d.id === currentDocId);
   if (!doc) return;
