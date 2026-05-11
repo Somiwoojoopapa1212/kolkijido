@@ -1092,10 +1092,11 @@
 
       /* 각종 오버레이 패널 */
       #favorites-overlay, #admin-overlay, #my-places-overlay {
-        max-width: 600px; left: 50%; transform: translateX(-50%);
+        max-width: 600px; left: 50%; right: auto; width: 600px;
+        transform: translateX(-50%) translateY(100%);
       }
       #favorites-overlay.open, #admin-overlay.open, #my-places-overlay.open {
-        transform: translateX(-50%);
+        transform: translateX(-50%) translateY(0);
       }
     }
   </style>
