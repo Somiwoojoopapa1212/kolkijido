@@ -198,7 +198,7 @@
     }
     #bottom-sheet.open { transform: translateY(0); }
     .sheet-handle { width: 40px; height: 4px; background: #E0D0F0; border-radius: 2px; margin: 12px auto 0; }
-    .sheet-content { padding: 16px 20px 32px; }
+    .sheet-content { padding: 16px 20px 32px; position: relative; }
     .sheet-name { font-family: 'Jua', sans-serif; font-size: 1.35rem; color: var(--text); margin-bottom: 4px; }
     .sheet-addr {
       font-size: 0.82rem; color: var(--text2); margin-bottom: 16px;
@@ -917,31 +917,37 @@
       padding:10px; font-family:'Jua',sans-serif; font-size:0.88rem; cursor:pointer;
     }
 
-    /* ══ 비로그인 유도 배너 ══ */
+    /* ══ 비로그인 오버레이 ══ */
     .sh-login-prompt {
-      background: linear-gradient(135deg, #f5eeff, #ede0ff);
-      border: 1.5px solid #d4a8e8;
-      border-radius: 14px;
-      padding: 18px 16px;
-      text-align: center;
-      margin: 12px 0;
+      position: absolute;
+      left: 0; right: 0; bottom: -32px;
+      top: 80px; /* 식당명·주소·구분선 아래부터 덮음 */
+      background: linear-gradient(to bottom, rgba(253,247,251,0.3) 0%, rgba(253,247,251,0.97) 20%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 40px;
+      z-index: 10;
     }
     .sh-login-prompt-text {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       color: var(--purple);
-      font-weight: 600;
-      margin-bottom: 12px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      text-align: center;
     }
     .sh-login-btn {
       background: var(--purple);
       color: white;
       border: none;
-      border-radius: 10px;
-      padding: 10px 24px;
+      border-radius: 12px;
+      padding: 12px 32px;
       font-family: 'Noto Sans KR', sans-serif;
-      font-size: 0.9rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
       cursor: pointer;
+      box-shadow: 0 4px 16px rgba(82,24,72,0.25);
     }
     .sh-login-btn:active { opacity: 0.85; }
 
@@ -1141,6 +1147,13 @@
   <button class="btn-close-sheet" onclick="closeSheet()">✕</button>
   <div class="sheet-handle"></div>
   <div class="sheet-content">
+
+    <!-- ════ 비로그인 오버레이 ════ -->
+    <div id="sh-login-prompt" class="sh-login-prompt hidden">
+      <div class="sh-login-prompt-text">🔒 상세 정보는 로그인 후 확인할 수 있어요</div>
+      <button class="sh-login-btn" onclick="signInGoogle()">Google로 로그인</button>
+    </div>
+
     <div class="sheet-name" id="sh-name">-</div>
     <div class="sheet-addr" id="sh-addr" onclick="openNaverMap()">📍 -</div>
     <div class="sheet-divider"></div>
@@ -1207,14 +1220,6 @@
     <div class="note-record-bar">
       <button class="btn-note-whisky" onclick="openNoteApp('whisky')">🥃 위스키 노트에 기록</button>
       <button class="btn-note-hanju"  onclick="openNoteApp('hanju')">🍶 주향 노트에 기록</button>
-    </div>
-
-    <!-- ════ 비로그인 유도 배너 ════ -->
-    <div id="sh-login-prompt" class="sh-login-prompt hidden">
-      <div class="sh-login-prompt-text">
-        🔒 상세 정보는 로그인 후 확인할 수 있어요
-      </div>
-      <button class="sh-login-btn" onclick="signInGoogle()">Google로 로그인</button>
     </div>
 
     <!-- ════ 로그인 후 표시 영역 ════ -->
