@@ -1070,11 +1070,12 @@
         padding: 16px 24px;
       }
 
-      /* FAB - 우측 하단 고정 */
-      #fab { bottom: 36px; right: 24px; width: 52px; height: 52px; font-size: 1.4rem; }
-
-      /* 내 위치 버튼 - 좌측으로 이동 (사이드 패널과 겹치지 않게) */
-      #locate-btn { bottom: 36px; right: auto; left: 24px; }
+      /* FAB + 내위치 - 좌측 버튼 묶음 (줌 컨트롤 위) */
+      #fab {
+        bottom: 200px; right: auto; left: 24px;
+        width: 52px; height: 52px; font-size: 1.4rem;
+      }
+      #locate-btn { bottom: 140px; right: auto; left: 24px; }
 
       /* 뷰 토글 버튼 */
       #view-toggle-btn { bottom: 36px; left: 50%; transform: translateX(-50%); }
