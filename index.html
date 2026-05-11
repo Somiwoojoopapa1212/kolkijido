@@ -1613,6 +1613,8 @@ let formGlass     = '';
 
 /* ════ 인증 ════ */
 let appInitialized = false;
+const needsLogin = new URLSearchParams(window.location.search).get('login') === '1';
+
 auth.onAuthStateChanged(user => {
   const splash = document.getElementById('splash-screen');
   const hideSplash = () => {
@@ -1626,6 +1628,10 @@ auth.onAuthStateChanged(user => {
     // 최초 진입
     appInitialized = true;
     showApp(user);
+    // 카카오 외부 브라우저로 열기 시도 후 진입 시 로그인 화면 표시
+    if (needsLogin && !user) {
+      document.getElementById('login-screen').style.display = 'flex';
+    }
     hideSplash();
   } else if (wasLoggedIn && !user) {
     // 로그아웃: 바텀 시트·메뉴 닫고 UI 갱신
@@ -3041,7 +3047,8 @@ function continueWithKakao() {
 }
 
 function tryOpenExternal() {
-  const url = window.location.href;
+  const base = window.location.href.split('?')[0];
+  const url  = base + '?login=1';
   if (/android/i.test(navigator.userAgent)) {
     window.location.href = `intent://${url.replace(/https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`;
   } else {
