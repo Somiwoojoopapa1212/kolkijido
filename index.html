@@ -833,6 +833,7 @@
     .notice-item-body  { font-size: 0.82rem; color: var(--text2); line-height: 1.55; white-space: pre-wrap; }
     .notice-item-date  { font-size: 0.72rem; color: var(--purple2); margin-top: 5px; }
     .notice-empty { padding: 12px 20px; font-size: 0.85rem; color: var(--text2); }
+    .menu-divider { height: 1px; background: #F0E8FF; }
     .menu-footer { border-top: 1px solid #F0E8FF; }
     .menu-logout {
       display: flex; align-items: center; gap: 10px; width: 100%;
@@ -1048,14 +1049,14 @@
       /* 메뉴 패널 - 보완 블록에서 override (main CSS보다 뒤에 와야 효과 있음) */
       #menu-panel { background: #1A0E18 !important; }
       .menu-user { background: linear-gradient(135deg, #4D204D, #7B2E7B); }
-      .menu-fav-btn { color: var(--purple3) !important; background: none !important; }
+      .menu-fav-btn { color: #E8E0EE !important; background: none !important; }
       .menu-fav-btn:active { background: #2A1828 !important; }
-      .menu-section-title { color: var(--text2); }
+      .menu-section-title { color: #A090A8 !important; }
+      .menu-divider { background: #2A1828 !important; }
       .menu-footer { border-top-color: #2A1828 !important; }
-      .menu-footer div[style] { background: #2A1828 !important; }
-      .menu-logout { color: #E87070; }
+      .menu-logout { color: #E87070 !important; }
       .menu-logout:active { background: #2A1020 !important; }
-      .notice-empty { color: var(--text2); }
+      .notice-empty { color: #A090A8 !important; }
     }
 
     /* ════════════════════════════════
@@ -1270,13 +1271,13 @@
   </div>
   <div class="menu-footer">
     <button class="menu-fav-btn" id="menu-btn-fav" onclick="openFavorites(); closeMenu()"><img src="icons/custom/favorite.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">즐겨찾기</button>
-    <div style="height:1px;background:#F0E8FF"></div>
+    <div class="menu-divider"></div>
     <button class="menu-fav-btn" id="menu-btn-myplaces" onclick="openMyPlaces(); closeMenu()"><img src="icons/custom/myplaces.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">내가 등록한 식당</button>
-    <div style="height:1px;background:#F0E8FF"></div>
-    <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/whisky-notes/'">🥃 위스키 노트</button>
-    <div style="height:1px;background:#F0E8FF"></div>
-    <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/hanju-note/'">🍶 주향 노트</button>
-    <div style="height:1px;background:#F0E8FF"></div>
+    <div class="menu-divider"></div>
+    <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/whisky-notes/'"><img src="icons/custom/whisky-note.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">위스키 노트</button>
+    <div class="menu-divider"></div>
+    <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/hanju-note/'"><img src="icons/custom/hanju-note.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">주향 노트</button>
+    <div class="menu-divider"></div>
     <button class="menu-logout" id="menu-btn-logout" onclick="signOut()"><img src="icons/custom/logout.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">로그아웃</button>
   </div>
 </div>
