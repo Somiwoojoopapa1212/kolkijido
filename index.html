@@ -448,20 +448,23 @@
     .btn-submit:active { transform: scale(0.97); }
 
     /* ══ 맵 마커 ══ */
-    .map-marker {
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
-      width: 36px; height: 36px; border: 2.5px solid white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3); cursor: pointer;
+    .map-marker-wrap {
+      display: flex; flex-direction: column; align-items: center; cursor: pointer;
     }
-    .map-marker .inner {
-      transform: rotate(45deg); font-size: 0.68rem; font-weight: 700;
-      color: white; line-height: 1; text-align: center;
+    .map-marker-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      border: 2.5px solid white;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+      display: block; object-fit: cover;
     }
-    .map-marker.free    { background: var(--free); }
-    .map-marker.paid    { background: var(--paid); }
-    .map-marker.no      { background: var(--no); }
-    .map-marker.unknown { background: var(--unknown); }
+    .map-marker-ptr {
+      width: 0; height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 9px solid white;
+      margin-top: -1px;
+      filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
+    }
 
     /* ══ 로딩 ══ */
     .loading-overlay { position: fixed; inset: 0; background: rgba(108,52,131,0.6); display: flex; align-items: center; justify-content: center; z-index: 9998; }
@@ -1915,17 +1918,19 @@ function initMap() {
 }
 
 function createMarkerIcon(status, name) {
-  const labels = { free:'무료', paid:'유료', no:'불가', unknown:'?' };
+  const iconMap = { free:'icons/custom/free.png', paid:'icons/custom/paid.png', no:'icons/custom/unavailable.png', unknown:'icons/custom/unknown.png' };
+  const src = iconMap[status] || iconMap.unknown;
   const shortName = name ? (name.length > 9 ? name.slice(0, 9) + '…' : name) : '';
   const nameLabel = shortName
-    ? `<div style="background:white;border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:#2C3E50;white-space:nowrap;box-shadow:0 1px 5px rgba(0,0,0,0.22);margin-bottom:3px;font-family:'Noto Sans KR',sans-serif">${shortName}</div>`
+    ? `<div style="background:rgba(30,20,40,0.82);backdrop-filter:blur(3px);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:white;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,0.3);margin-bottom:3px;font-family:'Pretendard',sans-serif">${shortName}</div>`
     : '';
+  const totalH = 42 + 9 + (shortName ? 22 : 0);
   return L.divIcon({
-    html: `<div style="display:flex;flex-direction:column;align-items:center">${nameLabel}<div class="map-marker ${status}"><div class="inner">${labels[status]||'?'}</div></div></div>`,
+    html: `<div class="map-marker-wrap">${nameLabel}<img src="${src}" class="map-marker-icon"><div class="map-marker-ptr"></div></div>`,
     className: '',
-    iconSize: [36, shortName ? 56 : 36],
-    iconAnchor: [18, shortName ? 56 : 36],
-    popupAnchor: [0, shortName ? -58 : -38],
+    iconSize: [42, totalH],
+    iconAnchor: [21, totalH],
+    popupAnchor: [0, -(totalH + 4)],
   });
 }
 
