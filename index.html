@@ -2394,7 +2394,10 @@ function openFormForAdd() {
   document.getElementById('form-place-name').textContent = selectedPlace.name;
   document.getElementById('form-place-addr').textContent = selectedPlace.address;
   document.getElementById('form-submit-btn').textContent = '등록하기';
-  if (selectedPlace.phone) document.getElementById('form-phone').value = selectedPlace.phone;
+  if (selectedPlace.phone) {
+    document.getElementById('form-phone').value = selectedPlace.phone;
+    setTimeout(() => showToast('📞 전화번호가 자동 입력됐습니다'), 400);
+  }
   closeSheet();
   const fo = document.getElementById('form-overlay');
   fo.classList.add('open');
