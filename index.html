@@ -3497,33 +3497,52 @@ function viewPhoto(url) {
 (function() {
   history.pushState({ page: 'app' }, '');
   let exitReady = false;
+  let exitTimer = null;
+  let skipping = false;
 
   function isOpen(id) {
     const el = document.getElementById(id);
     return el && (el.classList.contains('open') || el.style.display === 'flex');
   }
 
-  window.addEventListener('popstate', function() {
-    // 열린 UI를 우선순위대로 닫기
-    if (isOpen('form-overlay'))     { closeForm();          history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('review-overlay'))   { closeReview();        history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('admin-overlay'))    { closeAdmin();         history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('favorites-overlay')){ closeFavorites();     history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('my-places-overlay')){ closeMyPlaces();      history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('login-screen'))     { document.getElementById('login-screen').style.display = 'none'; history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('search-overlay'))   { closeSearch();        history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('menu-panel'))       { closeMenu();          history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('status-backdrop'))  { closeStatusFilter();  history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('area-backdrop'))    { closeAreaFilter();    history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('speed-dial'))       { closeSpeedDial();     history.pushState({ page: 'app' }, ''); return; }
-    if (isOpen('bottom-sheet'))     { closeSheet();         history.pushState({ page: 'app' }, ''); return; }
+  function tryCloseUI() {
+    if (isOpen('form-overlay'))      { closeForm();         return true; }
+    if (isOpen('review-overlay'))    { closeReview();       return true; }
+    if (isOpen('admin-overlay'))     { closeAdmin();        return true; }
+    if (isOpen('favorites-overlay')) { closeFavorites();    return true; }
+    if (isOpen('my-places-overlay')) { closeMyPlaces();     return true; }
+    if (isOpen('login-screen'))      { document.getElementById('login-screen').style.display = 'none'; return true; }
+    if (isOpen('search-overlay'))    { closeSearch();       return true; }
+    if (isOpen('menu-panel'))        { closeMenu();         return true; }
+    if (isOpen('status-backdrop'))   { closeStatusFilter(); return true; }
+    if (isOpen('area-backdrop'))     { closeAreaFilter();   return true; }
+    if (isOpen('speed-dial'))        { closeSpeedDial();    return true; }
+    if (isOpen('bottom-sheet'))      { closeSheet();        return true; }
+    return false;
+  }
 
-    // 아무것도 열려있지 않으면 "한 번 더 누르면 종료"
-    if (exitReady) return; // 두 번째 누름 → 종료
-    exitReady = true;
-    showToast('뒤로가기를 한 번 더 누르면 종료됩니다');
+  window.addEventListener('popstate', function() {
+    if (skipping) { skipping = false; return; }
+
+    // popstate 즉시 sentinel 복원 (히스토리 소진 방지)
     history.pushState({ page: 'app' }, '');
-    setTimeout(() => { exitReady = false; }, 2000);
+
+    if (tryCloseUI()) {
+      exitReady = false;
+      clearTimeout(exitTimer);
+      return;
+    }
+
+    // 아무것도 열려있지 않음
+    if (!exitReady) {
+      exitReady = true;
+      showToast('뒤로가기를 한 번 더 누르면 종료됩니다');
+      exitTimer = setTimeout(() => { exitReady = false; }, 2000);
+    } else {
+      // 두 번째 누름 → 쌓인 히스토리 전부 소진해서 앱 종료
+      skipping = true;
+      history.go(-(history.length));
+    }
   });
 })();
 
