@@ -424,7 +424,7 @@
       text-align: center; cursor: pointer; font-size: 0.82rem; color: var(--text2);
       transition: all 0.15s; background: white;
     }
-    .glass-opt .g-icon { font-size: 1.3rem; display: block; margin-bottom: 3px; }
+    .glass-opt .g-icon { display: flex; justify-content: center; align-items: center; margin-bottom: 4px; }
     .glass-opt.active { border-color: var(--purple); background: #F5EEFF; color: var(--purple); font-weight: 600; }
 
     /* 메모 */
@@ -688,8 +688,13 @@
       #bottom-sheet, .form-place-card { background: #1E1E2C; }
       #menu-panel { background: #1A0E18; }
       .menu-user { background: linear-gradient(135deg, #4D204D, #7B2E7B); }
-      .menu-fav-btn { color: var(--purple); }
+      .menu-fav-btn { color: var(--purple3); background: none; }
+      .menu-fav-btn:active { background: #2A1828; }
+      .menu-section-title { color: var(--text2); }
       .menu-logout  { color: #E87070; }
+      .menu-logout:active { background: #2A1020; }
+      .menu-footer { border-top-color: #2A1828; }
+      .notice-empty { color: var(--text2); }
       .sheet-divider, .menu-divider { background: #2A1828; }
       .sheet-name   { color: var(--text); }
       .info-value   { color: var(--text); }
@@ -1253,10 +1258,10 @@
 <!-- ════ 필터 바 ════ -->
 <div id="filter-bar" class="hidden">
   <button class="filter-btn" id="status-filter-btn" onclick="openStatusFilter()">
-    🍷 콜키지: 전체 <span class="f-arrow">▾</span>
+    콜키지: 전체 <span class="f-arrow">▾</span>
   </button>
   <button class="filter-btn" id="area-filter-btn" onclick="openAreaFilter()">
-    📍 지역: 전체 <span class="f-arrow">▾</span>
+    지역: 전체 <span class="f-arrow">▾</span>
   </button>
 </div>
 
@@ -1314,35 +1319,23 @@
     <div class="sheet-divider"></div>
 
     <div class="info-row" id="sh-category-row">
-      <span class="info-icon">🏷️</span>
-      <span class="info-label">카테고리</span>
       <span class="info-value" id="sh-category" style="font-size:0.82rem;color:var(--text2)">-</span>
     </div>
     <div class="info-row">
-      <span class="info-icon">🍷</span>
-      <span class="info-label">콜키지</span>
       <span class="info-value"><span class="status-badge" id="sh-status">-</span></span>
     </div>
     <div class="info-row" id="sh-fee-row">
-      <span class="info-icon">💰</span>
-      <span class="info-label">비용</span>
       <span class="info-value" id="sh-fee">-</span>
     </div>
     <div class="info-row">
-      <span class="info-icon">🥂</span>
-      <span class="info-label">잔 제공</span>
       <span class="info-value" id="sh-glass">-</span>
     </div>
     <div class="info-row" id="sh-alcohol-row">
-      <span class="info-icon">🍾</span>
-      <span class="info-label">주종</span>
       <div class="info-value">
         <div class="alcohol-tags" id="sh-alcohol"></div>
       </div>
     </div>
     <div class="info-row" id="sh-memo-row">
-      <span class="info-icon">📝</span>
-      <span class="info-label">메모</span>
       <span class="info-value" id="sh-memo" style="font-size:0.85rem;color:var(--text2)">-</span>
     </div>
     <div class="sheet-meta" id="sh-meta"></div>
@@ -1524,7 +1517,7 @@
 <div class="filter-backdrop" id="status-backdrop" onclick="closeStatusFilter()"></div>
 <div class="filter-sheet" id="status-sheet">
   <div class="filter-sheet-handle"></div>
-  <div class="filter-sheet-title">🍷 콜키지 상태</div>
+  <div class="filter-sheet-title">콜키지 상태</div>
   <div id="status-option-list">
     <div class="status-option" onclick="applyStatusFilter('all')">
       <span class="s-icon">🍽️</span><span class="s-label">전체</span>
@@ -1553,7 +1546,7 @@
 <div class="filter-backdrop" id="area-backdrop" onclick="closeAreaFilter()"></div>
 <div class="filter-sheet" id="area-sheet">
   <div class="filter-sheet-handle"></div>
-  <div class="filter-sheet-title">📍 지역 선택</div>
+  <div class="filter-sheet-title">지역 선택</div>
   <div class="area-grid">
     <div class="area-chip active" data-area="전체"       onclick="selectArea('전체')">전체</div>
     <div class="area-chip" data-area="강남·서초"         onclick="selectArea('강남·서초')">강남·서초</div>
@@ -1928,7 +1921,7 @@ function setFilter(f) {
   activeFilter = f;
   const labels = { all:'전체', free:'무료', paid:'유료', no:'불가', unknown:'정보없음' };
   const btn = document.getElementById('status-filter-btn');
-  btn.innerHTML = `🍷 콜키지: ${labels[f] || '전체'} <span class="f-arrow">▾</span>`;
+  btn.innerHTML = `콜키지: ${labels[f] || '전체'} <span class="f-arrow">▾</span>`;
   btn.classList.toggle('active', f !== 'all');
   renderMarkers();
   if (currentView === 'list') renderListView();
@@ -1945,6 +1938,32 @@ function closeStatusFilter() {
   document.getElementById('status-backdrop').classList.remove('open');
   document.getElementById('status-sheet').classList.remove('open');
 }
+
+/* ════ 필터 시트 스와이프 닫기 ════ */
+(function() {
+  function addSwipe(sheetId, closeFn) {
+    const sheet = document.getElementById(sheetId);
+    let startY = 0, dragging = false;
+    sheet.addEventListener('touchstart', e => { startY = e.touches[0].clientY; dragging = false; }, { passive: true });
+    sheet.addEventListener('touchmove', e => {
+      const dy = e.touches[0].clientY - startY;
+      if (dy <= 0) return;
+      dragging = true;
+      sheet.style.transition = 'none';
+      sheet.style.transform = `translateY(${dy}px)`;
+    }, { passive: true });
+    sheet.addEventListener('touchend', e => {
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      if (dragging && (e.changedTouches[0].clientY - startY) > 60) closeFn();
+      dragging = false;
+    });
+  }
+  window.addEventListener('DOMContentLoaded', () => {
+    addSwipe('status-sheet', closeStatusFilter);
+    addSwipe('area-sheet',   closeAreaFilter);
+  });
+})();
 function applyStatusFilter(val) {
   closeStatusFilter();
   setFilter(val);
@@ -2154,7 +2173,7 @@ function goHome() {
   setFilter('all');
   activeArea = '전체';
   const areaBtn = document.getElementById('area-filter-btn');
-  if (areaBtn) areaBtn.innerHTML = `📍 지역: 전체 <span class="f-arrow">▾</span>`;
+  if (areaBtn) areaBtn.innerHTML = `지역: 전체 <span class="f-arrow">▾</span>`;
   if (areaBtn) areaBtn.classList.remove('active');
   renderMarkers();
   if (currentView === 'list') renderListView();
@@ -2623,7 +2642,7 @@ function selectArea(area) {
     el.classList.toggle('active', el.dataset.area === area)
   );
   const btn = document.getElementById('area-filter-btn');
-  btn.innerHTML = `📍 지역: ${area} <span class="f-arrow">▾</span>`;
+  btn.innerHTML = `지역: ${area} <span class="f-arrow">▾</span>`;
   btn.classList.toggle('active', area !== '전체');
   closeAreaFilter();
   renderMarkers();
