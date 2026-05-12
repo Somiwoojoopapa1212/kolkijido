@@ -200,20 +200,22 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     /* 서브 버튼 공통 */
+    /* Speed Dial 서브 버튼 - 아이콘이 버튼 전체를 채움 */
     #speed-dial #fab, #speed-dial #locate-btn, #speed-dial #view-toggle-btn {
       position: static; bottom: auto; right: auto; left: auto; top: auto;
-      width: 46px; height: 46px; border-radius: 50%; border: none;
-      background: white; box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-      font-size: 1.1rem; cursor: pointer;
+      width: 52px; height: 52px; border-radius: 16px; border: none;
+      background: transparent; box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+      cursor: pointer; overflow: hidden;
       display: flex; align-items: center; justify-content: center;
       transition: transform 0.15s; flex-shrink: 0; padding: 0;
     }
-    #speed-dial #fab { background: linear-gradient(135deg, var(--purple), var(--purple2)); color: white; }
+    #speed-dial #fab { box-shadow: 0 3px 14px rgba(77,32,77,0.45); }
     #speed-dial #fab:active, #speed-dial #locate-btn:active, #speed-dial #view-toggle-btn:active { transform: scale(0.92); }
-    .sd-btn-icon { width: 26px; height: 26px; object-fit: contain; display: block; }
-    .note-btn-icon { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; margin-right: 6px; }
-    /* 즐겨찾기 활성 상태 */
-    .btn-fav-sheet { opacity: 0.55; }
+    .sd-btn-icon { width: 52px; height: 52px; object-fit: cover; display: block; }
+    .note-btn-icon { width: 22px; height: 22px; object-fit: cover; vertical-align: middle; margin-right: 6px; border-radius: 6px; }
+    /* 즐겨찾기 버튼 - 아이콘이 버튼 전체를 채움 */
+    .btn-fav-sheet { opacity: 0.6; background: transparent !important; padding: 0; overflow: hidden; border-radius: 9px !important; width: 32px !important; height: 32px !important; }
+    .btn-fav-sheet img { width: 32px; height: 32px; object-fit: cover; display: block; }
     .btn-fav-sheet.active { opacity: 1; filter: drop-shadow(0 0 5px rgba(241,196,15,0.7)); }
 
     /* ══ 바텀 시트 (식당 상세) ══ */
@@ -722,9 +724,7 @@
       .search-item-cat  { color: var(--purple); }
 
       /* 바텀 시트 버튼 */
-      #speed-dial #view-toggle-btn,
-      #speed-dial #locate-btn { background: #2A1828; }
-      .sd-label { background: rgba(60,30,50,0.92); }
+      .sd-label { background: rgba(20,8,20,0.88); }
       .btn-fav-sheet, .btn-share-sheet,
       .btn-close-sheet  { background: #2A1828; color: var(--purple); }
 
@@ -1288,7 +1288,7 @@
 <div id="bottom-sheet">
   <div id="sheet-header">
     <div class="sheet-handle" style="position:absolute;left:50%;transform:translateX(-50%);top:10px;margin:0"></div>
-    <button class="btn-fav-sheet" id="sh-fav-btn" onclick="toggleFavorite()"><img src="icons/custom/favorite.png" alt="즐겨찾기" class="sd-btn-icon" style="width:20px;height:20px"></button>
+    <button class="btn-fav-sheet" id="sh-fav-btn" onclick="toggleFavorite()"><img src="icons/custom/favorite.png" alt="즐겨찾기"></button>
     <button class="btn-share-sheet" onclick="sharePlace()" aria-label="공유">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
