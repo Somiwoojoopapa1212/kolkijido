@@ -686,15 +686,6 @@
 
       /* 시트/패널 */
       #bottom-sheet, .form-place-card { background: #1E1E2C; }
-      #menu-panel { background: #1A0E18; }
-      .menu-user { background: linear-gradient(135deg, #4D204D, #7B2E7B); }
-      .menu-fav-btn { color: var(--purple3); background: none; }
-      .menu-fav-btn:active { background: #2A1828; }
-      .menu-section-title { color: var(--text2); }
-      .menu-logout  { color: #E87070; }
-      .menu-logout:active { background: #2A1020; }
-      .menu-footer { border-top-color: #2A1828; }
-      .notice-empty { color: var(--text2); }
       .sheet-divider, .menu-divider { background: #2A1828; }
       .sheet-name   { color: var(--text); }
       .info-value   { color: var(--text); }
@@ -1054,6 +1045,17 @@
       .btn-reserve { background: #1A2035; color: #7AB8E8; border-color: #2A3858; }
       .btn-note-whisky { background:rgba(193,127,36,0.15); color:#d4922a; border-color:rgba(193,127,36,0.4); }
       .btn-note-hanju  { background:rgba(74,139,196,0.15); color:#6aaada; border-color:rgba(74,139,196,0.4); }
+      /* 메뉴 패널 - 보완 블록에서 override (main CSS보다 뒤에 와야 효과 있음) */
+      #menu-panel { background: #1A0E18 !important; }
+      .menu-user { background: linear-gradient(135deg, #4D204D, #7B2E7B); }
+      .menu-fav-btn { color: var(--purple3) !important; background: none !important; }
+      .menu-fav-btn:active { background: #2A1828 !important; }
+      .menu-section-title { color: var(--text2); }
+      .menu-footer { border-top-color: #2A1828 !important; }
+      .menu-footer div[style] { background: #2A1828 !important; }
+      .menu-logout { color: #E87070; }
+      .menu-logout:active { background: #2A1020 !important; }
+      .notice-empty { color: var(--text2); }
     }
 
     /* ════════════════════════════════
