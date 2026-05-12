@@ -38,17 +38,17 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <meta name="theme-color" content="#6C3483">
+  <meta name="theme-color" content="#4D204D">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="콜키지도">
   <style>
     :root {
-      --purple:   #521848;
-      --purple2:  #8B3A7B;
+      --purple:   #4D204D;
+      --purple2:  #7B3A7B;
       --purple3:  #D4A8CA;
       --bg:       #FDF7FB;
       --white:    #FFFFFF;
-      --shadow:   rgba(82,24,72,0.14);
+      --shadow:   rgba(77,32,77,0.14);
       --free:     #27AE60;
       --paid:     #E67E22;
       --no:       #E74C3C;
@@ -61,7 +61,7 @@
 
     /* ══ 로그인 화면 ══ */
     #login-screen {
-      position: fixed; inset: 0; background: linear-gradient(160deg, #521848 0%, #2D0E28 100%);
+      position: fixed; inset: 0; background: linear-gradient(160deg, #4D204D 0%, #200A20 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
     }
     .login-logo { margin-bottom: 12px; }
@@ -511,7 +511,7 @@
     /* ══ 스플래시(초기 로딩) 화면 ══ */
     #splash-screen {
       position: fixed; inset: 0; z-index: 99999;
-      background: linear-gradient(160deg, #521848 0%, #2D0E28 100%);
+      background: linear-gradient(160deg, #4D204D 0%, #200A20 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 20px; transition: opacity 0.4s;
     }
@@ -537,7 +537,7 @@
 
     /* ══ 카카오 인앱 브라우저 안내 화면 ══ */
     #kakao-notice {
-      position: fixed; inset: 0; background: linear-gradient(160deg, #521848 0%, #2D0E28 100%);
+      position: fixed; inset: 0; background: linear-gradient(160deg, #4D204D 0%, #200A20 100%);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 9999; padding: 32px 24px; text-align: center;
     }
@@ -672,18 +672,18 @@
       #map { filter: brightness(0.82) contrast(1.05); }
 
       #login-screen, #splash-screen, #kakao-notice {
-        background: linear-gradient(160deg, #521848 0%, #1A0518 100%);
+        background: linear-gradient(160deg, #4D204D 0%, #140A14 100%);
       }
       /* 헤더/필터는 원색 유지 (로고 배경) */
-      #header { background: #521848; }
+      #header { background: #4D204D; }
       #filter-bar { background: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
       .filter-chip { background: var(--white); border-color: #332233; color: var(--text2); }
-      .filter-chip.active { background: #521848; color: white; border-color: #521848; }
+      .filter-chip.active { background: #4D204D; color: white; border-color: #4D204D; }
 
       /* 시트/패널 */
       #bottom-sheet, .form-place-card { background: #1E1E2C; }
       #menu-panel { background: #1A0E18; }
-      .menu-user { background: linear-gradient(135deg, #521848, #7B2E68); }
+      .menu-user { background: linear-gradient(135deg, #4D204D, #7B2E7B); }
       .menu-fav-btn { color: var(--purple); }
       .menu-logout  { color: #E87070; }
       .sheet-divider, .menu-divider { background: #2A1828; }
@@ -696,7 +696,7 @@
       .report-card  { background: #1E1E2C; }
       .notice-item  { border-bottom-color: #2A1828; }
       .list-sort-btn { background: var(--white); border-color: #332233; color: var(--purple); }
-      .list-sort-btn.active { background: #521848; color: white; border-color: #521848; }
+      .list-sort-btn.active { background: #4D204D; color: white; border-color: #4D204D; }
 
       /* 폼 입력 */
       .form-input, .form-textarea {
@@ -851,7 +851,7 @@
     #peek-card {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 750;
       background: white; border-radius: 20px 20px 0 0;
-      box-shadow: 0 -4px 24px rgba(82,24,72,0.14);
+      box-shadow: 0 -4px 24px rgba(77,32,77,0.14);
       transform: translateY(100%); transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
       padding: 0 20px 28px;
     }
@@ -878,7 +878,7 @@
     #install-banner {
       position: fixed; bottom: 84px; left: 16px; right: 16px; z-index: 9000;
       background: white; border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(82,24,72,0.18);
+      box-shadow: 0 4px 24px rgba(77,32,77,0.18);
       padding: 14px 16px; animation: slideUp 0.3s ease;
     }
     .install-row {
@@ -965,7 +965,7 @@
       font-size: 0.95rem;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(82,24,72,0.25);
+      box-shadow: 0 4px 16px rgba(77,32,77,0.25);
     }
     .sh-login-btn:active { opacity: 0.85; }
     .sh-login-btn-email {
