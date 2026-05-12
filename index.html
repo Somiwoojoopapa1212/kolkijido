@@ -210,6 +210,11 @@
     }
     #speed-dial #fab { background: linear-gradient(135deg, var(--purple), var(--purple2)); color: white; }
     #speed-dial #fab:active, #speed-dial #locate-btn:active, #speed-dial #view-toggle-btn:active { transform: scale(0.92); }
+    .sd-btn-icon { width: 26px; height: 26px; object-fit: contain; display: block; }
+    .note-btn-icon { width: 20px; height: 20px; object-fit: contain; vertical-align: middle; margin-right: 6px; }
+    /* 즐겨찾기 활성 상태 */
+    .btn-fav-sheet { opacity: 0.55; }
+    .btn-fav-sheet.active { opacity: 1; filter: drop-shadow(0 0 5px rgba(241,196,15,0.7)); }
 
     /* ══ 바텀 시트 (식당 상세) ══ */
     #bottom-sheet {
@@ -1265,15 +1270,15 @@
   <div id="sd-items">
     <div class="sd-item" id="sd-item-add">
       <span class="sd-label">식당 등록</span>
-      <button id="fab" onclick="openAddFlow(); closeSpeedDial()">➕</button>
+      <button id="fab" onclick="openAddFlow(); closeSpeedDial()"><img src="icons/custom/add.png" alt="식당 등록" class="sd-btn-icon"></button>
     </div>
     <div class="sd-item" id="sd-item-locate">
       <span class="sd-label">내 위치</span>
-      <button id="locate-btn" onclick="locateMe(); closeSpeedDial()">📍</button>
+      <button id="locate-btn" onclick="locateMe(); closeSpeedDial()"><img src="icons/custom/locate.png" alt="내 위치" class="sd-btn-icon"></button>
     </div>
     <div class="sd-item" id="sd-item-view">
       <span class="sd-label" id="sd-view-label">목록 보기</span>
-      <button id="view-toggle-btn" onclick="toggleView(); closeSpeedDial()">📋</button>
+      <button id="view-toggle-btn" onclick="toggleView(); closeSpeedDial()"><img src="icons/custom/listview.png" alt="목록 보기" class="sd-btn-icon" id="sd-view-icon"></button>
     </div>
   </div>
   <button id="sd-trigger" onclick="toggleSpeedDial()">＋</button>
@@ -1283,7 +1288,7 @@
 <div id="bottom-sheet">
   <div id="sheet-header">
     <div class="sheet-handle" style="position:absolute;left:50%;transform:translateX(-50%);top:10px;margin:0"></div>
-    <button class="btn-fav-sheet" id="sh-fav-btn" onclick="toggleFavorite()">☆</button>
+    <button class="btn-fav-sheet" id="sh-fav-btn" onclick="toggleFavorite()"><img src="icons/custom/favorite.png" alt="즐겨찾기" class="sd-btn-icon" style="width:20px;height:20px"></button>
     <button class="btn-share-sheet" onclick="sharePlace()" aria-label="공유">
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
@@ -1366,8 +1371,8 @@
     </div>
 
     <div class="note-record-bar">
-      <button class="btn-note-whisky" onclick="openNoteApp('whisky')">🥃 위스키 노트에 기록</button>
-      <button class="btn-note-hanju"  onclick="openNoteApp('hanju')">🍶 주향 노트에 기록</button>
+      <button class="btn-note-whisky" onclick="openNoteApp('whisky')"><img src="icons/custom/whisky-note.png" alt="" class="note-btn-icon">위스키 노트</button>
+      <button class="btn-note-hanju"  onclick="openNoteApp('hanju')"><img src="icons/custom/hanju-note.png" alt="" class="note-btn-icon">한주 노트</button>
     </div>
 
     <!-- ════ 로그인 후 표시 영역 ════ -->
@@ -1387,7 +1392,7 @@
     <div class="sheet-divider"></div>
     <div class="reviews-header">
       <span class="reviews-title">📝 후기</span>
-      <button class="btn-write-review" onclick="openReview()">후기 작성</button>
+      <button class="btn-write-review" onclick="openReview()"><img src="icons/custom/review.png" alt="" class="note-btn-icon">후기 작성</button>
     </div>
     <div id="sh-reviews"></div>
 
@@ -1685,6 +1690,16 @@ const auth = firebase.auth();
 const db   = firebase.firestore();
 
 const ALCOHOL_LABELS = { wine:'와인', baijiu:'고량주(백주)', japanese:'일본주', hanju:'한주', whiskey:'위스키', all:'전체' };
+const ALCOHOL_ICONS  = { wine:'icons/custom/wine.png', baijiu:'icons/custom/baijiu.png', japanese:'icons/custom/sake.png', hanju:'icons/custom/hanju.png', whiskey:'icons/custom/whisky.png' };
+const STATUS_ICONS   = { free:'icons/custom/free.png', paid:'icons/custom/paid.png', no:'icons/custom/unavailable.png', unknown:'icons/custom/unknown.png' };
+function statusHtml(status) {
+  const icon = STATUS_ICONS[status] || STATUS_ICONS.unknown;
+  return `<img src="${icon}" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;object-fit:contain">${STATUS_LABELS[status]||'정보 없음'}`;
+}
+function alcoholTagHtml(a) {
+  const icon = ALCOHOL_ICONS[a] ? `<img src="${ALCOHOL_ICONS[a]}" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;object-fit:contain">` : '';
+  return `<span class="alcohol-tag">${icon}${ALCOHOL_LABELS[a]||a}</span>`;
+}
 const AREA_NICKNAMES = {
   '홍대':'마포구', '합정':'마포구', '상수':'마포구', '망원':'마포구', '연남':'마포구',
   '이태원':'용산구', '한남':'용산구', '경리단':'용산구', '녹사평':'용산구',
@@ -1945,7 +1960,7 @@ function openSheet(docId) {
 
   // 콜키지 상태 뱃지 (비로그인도 표시)
   const statusEl = document.getElementById('sh-status');
-  statusEl.textContent = STATUS_LABELS[doc.corkageStatus] || '정보 없음';
+  statusEl.innerHTML = statusHtml(doc.corkageStatus);
   statusEl.className = 'status-badge ' + (doc.corkageStatus || 'unknown');
 
   // 비로그인: 상세 영역 숨기고 로그인 유도 표시 후 종료
@@ -1985,7 +2000,7 @@ function openSheet(docId) {
   const alcoholRow = document.getElementById('sh-alcohol-row');
   const alcoholEl  = document.getElementById('sh-alcohol');
   if (doc.alcoholTypes && doc.alcoholTypes.length) {
-    alcoholEl.innerHTML = doc.alcoholTypes.map(a => `<span class="alcohol-tag">${ALCOHOL_LABELS[a]||a}</span>`).join('');
+    alcoholEl.innerHTML = doc.alcoholTypes.map(a => alcoholTagHtml(a)).join('');
     alcoholRow.classList.remove('hidden');
   } else { alcoholRow.classList.add('hidden'); }
 
@@ -2707,7 +2722,7 @@ function renderListView() {
   const cards = filtered.map(doc => {
     const newTag  = isNew(doc) ? '<span class="new-badge">NEW</span>' : '';
     const alcohol = doc.alcoholTypes?.length
-      ? `<span class="list-card-alcohol">${doc.alcoholTypes.map(a => ALCOHOL_LABELS[a]||a).join(' · ')}</span>` : '';
+      ? `<span class="list-card-alcohol">${doc.alcoholTypes.map(a => `<img src="${ALCOHOL_ICONS[a]||''}" style="width:12px;height:12px;vertical-align:middle;margin-right:2px;object-fit:contain">${ALCOHOL_LABELS[a]||a}`).join(' · ')}</span>` : '';
     const vote = (doc.upCount || doc.downCount)
       ? `<span class="list-card-vote">👍 ${doc.upCount||0} · 👎 ${doc.downCount||0}</span>` : '';
     const dist = (sortBy === 'distance' && doc._dist < 9999)
@@ -2719,7 +2734,7 @@ function renderListView() {
         <div class="list-card-meta">${dist}${alcohol}${vote}</div>
       </div>
       <span class="status-badge ${doc.corkageStatus||'unknown'}" style="flex-shrink:0;font-size:0.74rem;white-space:nowrap">
-        ${statusLabel[doc.corkageStatus]||'정보없음'}
+        <img src="${STATUS_ICONS[doc.corkageStatus]||STATUS_ICONS.unknown}" style="width:12px;height:12px;vertical-align:middle;margin-right:2px;object-fit:contain">${statusLabel[doc.corkageStatus]||'정보없음'}
       </span>
     </div>`;
   }).join('');
@@ -2761,7 +2776,6 @@ function goToPlaceFromList(docId) {
 function updateFavoriteUI() {
   const btn = document.getElementById('sh-fav-btn');
   if (!btn) return;
-  btn.textContent = currentFavorite ? '★' : '☆';
   btn.classList.toggle('active', currentFavorite);
 }
 
