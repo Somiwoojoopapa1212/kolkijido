@@ -2396,7 +2396,9 @@ function openFormForAdd() {
   document.getElementById('form-submit-btn').textContent = '등록하기';
   if (selectedPlace.phone) document.getElementById('form-phone').value = selectedPlace.phone;
   closeSheet();
-  document.getElementById('form-overlay').classList.add('open');
+  const fo = document.getElementById('form-overlay');
+  fo.classList.add('open');
+  fo.querySelector('.form-body').scrollTop = 0;
 }
 
 async function openFormForEdit() {
@@ -2422,8 +2424,10 @@ async function openFormForEdit() {
   if (doc.reservationUrl) document.getElementById('form-reservation').value = doc.reservationUrl;
 
   closeSheet();
-  currentDocId = savedId; // closeSheet()로 null이 된 ID를 복원
-  document.getElementById('form-overlay').classList.add('open');
+  currentDocId = savedId;
+  const fo = document.getElementById('form-overlay');
+  fo.classList.add('open');
+  fo.querySelector('.form-body').scrollTop = 0;
 }
 
 function closeForm() {
