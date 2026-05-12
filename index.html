@@ -1340,8 +1340,8 @@
     </div>
     <div class="sheet-meta" id="sh-meta"></div>
     <div class="contact-bar hidden" id="sh-contact-bar">
-      <button class="btn-call"    id="sh-call-btn"    onclick="callPhone()">📞 전화하기</button>
-      <button class="btn-reserve" id="sh-reserve-btn" onclick="openReservation()">🔗 예약하기</button>
+      <button class="btn-call"    id="sh-call-btn"    onclick="callPhone()"><img src="icons/custom/call.png" style="width:18px;height:18px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:5px">전화하기</button>
+      <button class="btn-reserve" id="sh-reserve-btn" onclick="openReservation()"><img src="icons/custom/reserve.png" style="width:18px;height:18px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:5px">예약하기</button>
     </div>
 
     <div class="action-bar">
@@ -1356,11 +1356,11 @@
         <span>비추</span>
       </button>
       <button class="btn-action act-edit" onclick="openFormForEdit()">
-        <span class="act-icon">✏️</span>
+        <span class="act-icon"><img src="icons/custom/edit.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px"></span>
         <span>수정</span>
       </button>
       <button class="btn-action act-report" onclick="reportPlace()">
-        <span class="act-icon">🚨</span>
+        <span class="act-icon"><img src="icons/custom/report.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px"></span>
         <span>신고</span>
       </button>
     </div>
@@ -1461,7 +1461,7 @@
         <div class="alcohol-opt" data-val="japanese" onclick="toggleAlcohol('japanese')"><span class="a-icon"><img src="icons/custom/sake.png" class="form-opt-icon" alt="일본주"></span>일본주</div>
         <div class="alcohol-opt" data-val="hanju"    onclick="toggleAlcohol('hanju')"><span class="a-icon"><img src="icons/custom/hanju.png" class="form-opt-icon" alt="한주"></span>한주</div>
         <div class="alcohol-opt" data-val="whiskey"  onclick="toggleAlcohol('whiskey')"><span class="a-icon"><img src="icons/custom/whisky.png" class="form-opt-icon" alt="위스키"></span>위스키</div>
-        <div class="alcohol-opt" data-val="all"      onclick="toggleAlcohol('all')"><span class="a-icon">🍾</span>전체</div>
+        <div class="alcohol-opt" data-val="all"      onclick="toggleAlcohol('all')"><span class="a-icon"><img src="icons/custom/all-types.png" class="form-opt-icon" alt="전체"></span>전체</div>
       </div>
     </div>
 
@@ -1508,7 +1508,7 @@
       <textarea id="notice-body-input" class="form-textarea" placeholder="공지 내용..." style="min-height:60px;width:100%"></textarea>
       <button class="btn-submit" style="padding:11px;margin-top:8px;font-size:0.88rem" onclick="submitNotice()">공지 등록</button>
     </div>
-    <div style="font-weight:700;font-size:0.88rem;color:var(--text2);margin-bottom:10px">🚨 신고 목록</div>
+    <div style="font-weight:700;font-size:0.88rem;color:var(--text2);margin-bottom:10px"><img src="icons/custom/report.png" style="width:16px;height:16px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:5px">신고 목록</div>
     <div id="admin-reports"><div class="admin-empty">불러오는 중...</div></div>
   </div>
 </div>
