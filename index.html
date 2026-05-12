@@ -3493,6 +3493,40 @@ function viewPhoto(url) {
   document.body.appendChild(ov);
 }
 
+/* ════ Android 뒤로가기 버튼 처리 ════ */
+(function() {
+  history.pushState({ page: 'app' }, '');
+  let exitReady = false;
+
+  function isOpen(id) {
+    const el = document.getElementById(id);
+    return el && (el.classList.contains('open') || el.style.display === 'flex');
+  }
+
+  window.addEventListener('popstate', function() {
+    // 열린 UI를 우선순위대로 닫기
+    if (isOpen('form-overlay'))     { closeForm();          history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('review-overlay'))   { closeReview();        history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('admin-overlay'))    { closeAdmin();         history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('favorites-overlay')){ closeFavorites();     history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('my-places-overlay')){ closeMyPlaces();      history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('login-screen'))     { document.getElementById('login-screen').style.display = 'none'; history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('search-overlay'))   { closeSearch();        history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('menu-panel'))       { closeMenu();          history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('status-backdrop'))  { closeStatusFilter();  history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('area-backdrop'))    { closeAreaFilter();    history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('speed-dial'))       { closeSpeedDial();     history.pushState({ page: 'app' }, ''); return; }
+    if (isOpen('bottom-sheet'))     { closeSheet();         history.pushState({ page: 'app' }, ''); return; }
+
+    // 아무것도 열려있지 않으면 "한 번 더 누르면 종료"
+    if (exitReady) return; // 두 번째 누름 → 종료
+    exitReady = true;
+    showToast('뒤로가기를 한 번 더 누르면 종료됩니다');
+    history.pushState({ page: 'app' }, '');
+    setTimeout(() => { exitReady = false; }, 2000);
+  });
+})();
+
 /* ════ SW + 자동 업데이트 ════ */
 if ('serviceWorker' in navigator) {
   let pendingSW = null;
