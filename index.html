@@ -1101,6 +1101,30 @@
         padding: 16px 24px;
       }
 
+      /* 등록/수정·후기 폼 → 중앙 모달 */
+      #form-overlay,
+      #review-overlay {
+        background: rgba(0,0,0,0.55);
+        align-items: center;
+        justify-content: center;
+      }
+      #form-overlay .form-header,
+      #review-overlay .form-header {
+        width: 560px; max-width: 90vw;
+        border-radius: 20px 20px 0 0;
+        flex-shrink: 0;
+      }
+      #form-overlay .form-body,
+      #review-overlay .form-body {
+        width: 560px; max-width: 90vw;
+        max-height: 70vh;
+        overflow-y: auto;
+        border-radius: 0 0 20px 20px;
+        background: var(--bg);
+        box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+        padding: 24px 28px 48px;
+      }
+
       /* Speed Dial - 좌측 하단 (줌 컨트롤 위) */
       #speed-dial { bottom: 140px; right: auto; left: 24px; align-items: flex-start; }
       #sd-items { align-items: flex-start; }
