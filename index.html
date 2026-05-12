@@ -1208,12 +1208,12 @@
     콜키지도
   </div>
   <div class="search-bar" onclick="openSearch()">
-    <span class="search-icon">🔍</span>
+    <span class="search-icon"><img src="icons/custom/search.png" style="width:20px;height:20px;object-fit:cover;border-radius:5px;vertical-align:middle"></span>
     <span class="search-placeholder">식당 검색...</span>
   </div>
-  <button id="admin-btn" class="icon-btn hidden" onclick="openAdmin()" style="background:rgba(231,76,60,0.3)">🛡️</button>
-  <button class="hamburger-btn" id="hamburger-btn" onclick="openMenu()">
-    ☰
+  <button id="admin-btn" class="icon-btn hidden" onclick="openAdmin()" style="background:transparent;border:none;padding:0;overflow:hidden;border-radius:10px;width:36px;height:36px"><img src="icons/custom/admin.png" style="width:36px;height:36px;object-fit:cover;display:block"></button>
+  <button class="hamburger-btn" id="hamburger-btn" onclick="openMenu()" style="background:transparent;border:none;padding:0;overflow:hidden;border-radius:10px;width:36px;height:36px;position:relative">
+    <img src="icons/custom/menu.png" style="width:36px;height:36px;object-fit:cover;display:block">
     <span class="notice-badge hidden" id="notice-badge"></span>
   </button>
 </div>
@@ -1234,19 +1234,19 @@
     <div class="menu-user-email">탭하여 로그인</div>
   </div>
   <div class="menu-section">
-    <div class="menu-section-title">📢 공지사항</div>
+    <div class="menu-section-title"><img src="icons/custom/notice.png" style="width:20px;height:20px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:6px">공지사항</div>
     <div id="menu-notices"><div class="notice-empty">불러오는 중...</div></div>
   </div>
   <div class="menu-footer">
-    <button class="menu-fav-btn" id="menu-btn-fav" onclick="openFavorites(); closeMenu()">⭐ 즐겨찾기</button>
+    <button class="menu-fav-btn" id="menu-btn-fav" onclick="openFavorites(); closeMenu()"><img src="icons/custom/favorite.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">즐겨찾기</button>
     <div style="height:1px;background:#F0E8FF"></div>
-    <button class="menu-fav-btn" id="menu-btn-myplaces" onclick="openMyPlaces(); closeMenu()">🏠 내가 등록한 식당</button>
+    <button class="menu-fav-btn" id="menu-btn-myplaces" onclick="openMyPlaces(); closeMenu()"><img src="icons/custom/myplaces.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">내가 등록한 식당</button>
     <div style="height:1px;background:#F0E8FF"></div>
     <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/whisky-notes/'">🥃 위스키 노트</button>
     <div style="height:1px;background:#F0E8FF"></div>
     <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/hanju-note/'">🍶 주향 노트</button>
     <div style="height:1px;background:#F0E8FF"></div>
-    <button class="menu-logout" id="menu-btn-logout" onclick="signOut()">🚪 로그아웃</button>
+    <button class="menu-logout" id="menu-btn-logout" onclick="signOut()"><img src="icons/custom/logout.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">로그아웃</button>
   </div>
 </div>
 
@@ -1353,12 +1353,12 @@
 
     <div class="action-bar">
       <button class="btn-action vote-up" id="sh-vote-up" onclick="castVote('up')">
-        <span class="act-icon">👍</span>
+        <span class="act-icon"><img src="icons/custom/recommend.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px"></span>
         <span class="act-cnt" id="sh-up-cnt">0</span>
         <span>추천</span>
       </button>
       <button class="btn-action vote-down" id="sh-vote-down" onclick="castVote('down')">
-        <span class="act-icon">👎</span>
+        <span class="act-icon"><img src="icons/custom/disrecommend.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px"></span>
         <span class="act-cnt" id="sh-down-cnt">0</span>
         <span>비추</span>
       </button>
@@ -1407,7 +1407,7 @@
 <div id="search-overlay">
   <div class="search-overlay-header">
     <div class="search-input-wrap">
-      <span class="search-icon-abs">🔍</span>
+      <span class="search-icon-abs"><img src="icons/custom/search.png" style="width:20px;height:20px;object-fit:cover;border-radius:5px;vertical-align:middle"></span>
       <input type="text" id="search-input" class="search-input" placeholder="등록된 콜키지 식당 검색..."
         oninput="onSearchInput(this.value)" autocomplete="off">
     </div>
@@ -1476,9 +1476,9 @@
     <div class="form-section">
       <label class="form-label">🥂 잔 제공 여부</label>
       <div class="glass-grid">
-        <div class="glass-opt" data-val="true" onclick="selectGlass('true')"><span class="g-icon">✅</span>있음</div>
-        <div class="glass-opt" data-val="false" onclick="selectGlass('false')"><span class="g-icon">❌</span>없음</div>
-        <div class="glass-opt" data-val="null" onclick="selectGlass('null')"><span class="g-icon">❓</span>모름</div>
+        <div class="glass-opt" data-val="true" onclick="selectGlass('true')"><span class="g-icon"><img src="icons/custom/glass-yes.png" class="form-opt-icon" alt="있음"></span>있음</div>
+        <div class="glass-opt" data-val="false" onclick="selectGlass('false')"><span class="g-icon"><img src="icons/custom/glass-no.png" class="form-opt-icon" alt="없음"></span>없음</div>
+        <div class="glass-opt" data-val="null" onclick="selectGlass('null')"><span class="g-icon"><img src="icons/custom/glass-unknown.png" class="form-opt-icon" alt="모름"></span>모름</div>
       </div>
     </div>
 
@@ -1596,8 +1596,8 @@
     <div class="form-section">
       <label class="form-label">⭐ 방문 평가</label>
       <div class="vote-choice-grid">
-        <div class="vote-choice" data-val="up"   onclick="selectVoteChoice('up')">👍 추천해요</div>
-        <div class="vote-choice" data-val="down" onclick="selectVoteChoice('down')">👎 별로예요</div>
+        <div class="vote-choice" data-val="up"   onclick="selectVoteChoice('up')"><img src="icons/custom/recommend.png" style="width:24px;height:24px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:6px">추천해요</div>
+        <div class="vote-choice" data-val="down" onclick="selectVoteChoice('down')"><img src="icons/custom/disrecommend.png" style="width:24px;height:24px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:6px">별로예요</div>
       </div>
     </div>
 
@@ -1995,8 +1995,12 @@ function openSheet(docId) {
   }
 
   // 잔 제공
-  const glassMap = { 'true':'✅ 있음', 'false':'❌ 없음', 'null':'❓ 모름' };
-  document.getElementById('sh-glass').textContent = glassMap[String(doc.glassProvided)] || '❓ 모름';
+  const glassMap = {
+    'true':  '<img src="icons/custom/glass-yes.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px"> 있음',
+    'false': '<img src="icons/custom/glass-no.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px"> 없음',
+    'null':  '<img src="icons/custom/glass-unknown.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px"> 모름'
+  };
+  document.getElementById('sh-glass').innerHTML = glassMap[String(doc.glassProvided)] || glassMap['null'];
 
   // 주종
   const alcoholRow = document.getElementById('sh-alcohol-row');
