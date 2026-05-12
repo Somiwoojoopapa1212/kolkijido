@@ -3220,8 +3220,12 @@ function renderPlacesList(containerId, mode) {
   let docs = [...allDocs];
 
   if (mode === 'new') {
+    docs = docs.filter(d => isNew(d));
     docs.sort((a, b) => (b.addedAt?.seconds || 0) - (a.addedAt?.seconds || 0));
-    docs = docs.slice(0, 30);
+    if (!docs.length) {
+      container.innerHTML = '<div class="admin-empty">최근 7일 내 새로 등록된 식당이 없습니다.</div>';
+      return;
+    }
   } else if (mode === 'top') {
     docs.sort((a, b) => (b.upCount || 0) - (a.upCount || 0));
     docs = docs.filter(d => (d.upCount || 0) > 0).slice(0, 30);
