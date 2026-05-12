@@ -718,7 +718,7 @@
 
       /* 오버레이 */
       #search-overlay, #form-overlay, #review-overlay,
-      #favorites-overlay, #list-view { background: var(--bg); }
+      #favorites-overlay, #list-view, #newplaces-overlay, #topplaces-overlay { background: var(--bg); }
       .search-overlay-header { background: var(--white); border-bottom-color: #2A1828; }
       .search-input { background: var(--white); color: var(--text); border-color: #3A2838; }
       .search-item  { border-bottom-color: #2A1828; }
@@ -906,12 +906,12 @@
     }
 
     /* ══ 내가 등록한 식당 오버레이 ══ */
-    #myplaces-overlay {
+    #myplaces-overlay, #newplaces-overlay, #topplaces-overlay {
       position: fixed; inset: 0; z-index: 2300;
       background: var(--bg); display: flex; flex-direction: column;
       transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
     }
-    #myplaces-overlay.open { transform: translateY(0); }
+    #myplaces-overlay.open, #newplaces-overlay.open, #topplaces-overlay.open { transform: translateY(0); }
 
     /* ══ 전화/예약 버튼 ══ */
     .contact-bar { display: flex; gap: 8px; margin-top: 10px; }
@@ -1156,11 +1156,13 @@
       }
 
       /* 각종 오버레이 패널 */
-      #favorites-overlay, #admin-overlay, #my-places-overlay {
+      #favorites-overlay, #admin-overlay, #my-places-overlay,
+      #newplaces-overlay, #topplaces-overlay {
         max-width: 600px; left: 50%; right: auto; width: 600px;
         transform: translateX(-50%) translateY(100%);
       }
-      #favorites-overlay.open, #admin-overlay.open, #my-places-overlay.open {
+      #favorites-overlay.open, #admin-overlay.open, #my-places-overlay.open,
+      #newplaces-overlay.open, #topplaces-overlay.open {
         transform: translateX(-50%) translateY(0);
       }
     }
@@ -1286,9 +1288,9 @@
     <div class="menu-divider"></div>
     <button class="menu-fav-btn" id="menu-btn-myplaces" onclick="openMyPlaces(); closeMenu()"><img src="icons/custom/myplaces.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">내가 등록한 식당</button>
     <div class="menu-divider"></div>
-    <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/whisky-notes/'"><img src="icons/custom/whisky-note.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">위스키 노트</button>
+    <button class="menu-fav-btn" onclick="openNewPlaces(); closeMenu()"><img src="icons/custom/add.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">새로 등록된 식당</button>
     <div class="menu-divider"></div>
-    <button class="menu-fav-btn" onclick="window.location.href='https://somiwoojoopapa1212.github.io/hanju-note/'"><img src="icons/custom/hanju-note.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">주향 노트</button>
+    <button class="menu-fav-btn" onclick="openTopPlaces(); closeMenu()"><img src="icons/custom/recommend.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">추천 많은 식당</button>
     <div class="menu-divider"></div>
     <button class="menu-logout" id="menu-btn-logout" onclick="signOut()"><img src="icons/custom/logout.png" style="width:22px;height:22px;object-fit:cover;border-radius:5px;vertical-align:middle;margin-right:8px">로그아웃</button>
   </div>
@@ -1743,6 +1745,26 @@
     <h2>🏠 내가 등록한 식당</h2>
   </div>
   <div id="myplaces-list" style="flex:1;overflow-y:auto;padding:16px">
+    <div class="admin-empty">불러오는 중...</div>
+  </div>
+</div>
+
+<div id="newplaces-overlay">
+  <div class="form-header">
+    <button class="form-back" onclick="closeNewPlaces()">←</button>
+    <h2>새로 등록된 식당</h2>
+  </div>
+  <div id="newplaces-list" style="flex:1;overflow-y:auto;padding:16px">
+    <div class="admin-empty">불러오는 중...</div>
+  </div>
+</div>
+
+<div id="topplaces-overlay">
+  <div class="form-header">
+    <button class="form-back" onclick="closeTopPlaces()">←</button>
+    <h2>추천 많은 식당</h2>
+  </div>
+  <div id="topplaces-list" style="flex:1;overflow-y:auto;padding:16px">
     <div class="admin-empty">불러오는 중...</div>
   </div>
 </div>
@@ -3170,6 +3192,63 @@ function closeMyPlaces() {
   document.getElementById('myplaces-overlay').classList.remove('open');
 }
 
+/* ════ 새로 등록된 식당 ════ */
+function openNewPlaces() {
+  document.getElementById('newplaces-overlay').classList.add('open');
+  renderPlacesList('newplaces-list', 'new');
+}
+function closeNewPlaces() {
+  document.getElementById('newplaces-overlay').classList.remove('open');
+}
+
+/* ════ 추천 많은 식당 ════ */
+function openTopPlaces() {
+  document.getElementById('topplaces-overlay').classList.add('open');
+  renderPlacesList('topplaces-list', 'top');
+}
+function closeTopPlaces() {
+  document.getElementById('topplaces-overlay').classList.remove('open');
+}
+
+function renderPlacesList(containerId, mode) {
+  const container = document.getElementById(containerId);
+  if (!allDocs.length) {
+    container.innerHTML = '<div class="admin-empty">데이터를 불러오는 중입니다.</div>';
+    return;
+  }
+  const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보없음' };
+  let docs = [...allDocs];
+
+  if (mode === 'new') {
+    docs.sort((a, b) => (b.addedAt?.seconds || 0) - (a.addedAt?.seconds || 0));
+    docs = docs.slice(0, 30);
+  } else if (mode === 'top') {
+    docs.sort((a, b) => (b.upCount || 0) - (a.upCount || 0));
+    docs = docs.filter(d => (d.upCount || 0) > 0).slice(0, 30);
+    if (!docs.length) {
+      container.innerHTML = '<div class="admin-empty">아직 추천이 등록된 식당이 없습니다.</div>';
+      return;
+    }
+  }
+
+  container.innerHTML = docs.map(doc => {
+    const date = doc.addedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '';
+    const extra = mode === 'new'
+      ? (date ? `<div style="font-size:0.72rem;color:var(--text2);margin-top:3px">📅 ${date} 등록</div>` : '')
+      : `<div style="font-size:0.72rem;color:var(--text2);margin-top:3px">👍 추천 ${doc.upCount || 0}개</div>`;
+    return `<div class="fav-item" onclick="goToPlace('${doc.id}'); ${mode === 'new' ? 'closeNewPlaces()' : 'closeTopPlaces()'}">
+      <div class="fav-item-info">
+        <div class="fav-item-name">${doc.name}${isNew(doc) ? '<span class="new-badge">NEW</span>' : ''}</div>
+        <div class="fav-item-addr">${doc.address || ''}</div>
+        ${extra}
+      </div>
+      <span class="status-badge ${doc.corkageStatus || 'unknown'}" style="flex-shrink:0;font-size:0.74rem;white-space:nowrap">
+        ${statusLabel[doc.corkageStatus] || '정보없음'}
+      </span>
+    </div>`;
+  }).join('');
+}
+
 async function loadMyPlaces() {
   const container = document.getElementById('myplaces-list');
   container.innerHTML = '<div class="admin-empty">불러오는 중...</div>';
@@ -3617,7 +3696,9 @@ function viewPhoto(url) {
     if (isOpen('review-overlay'))    { closeReview();       return true; }
     if (isOpen('admin-overlay'))     { closeAdmin();        return true; }
     if (isOpen('favorites-overlay')) { closeFavorites();    return true; }
-    if (isOpen('my-places-overlay')) { closeMyPlaces();     return true; }
+    if (isOpen('my-places-overlay')) { closeMyPlaces();   return true; }
+    if (isOpen('newplaces-overlay')) { closeNewPlaces();  return true; }
+    if (isOpen('topplaces-overlay')) { closeTopPlaces();  return true; }
     if (isOpen('login-screen'))      { document.getElementById('login-screen').style.display = 'none'; return true; }
     if (isOpen('search-overlay'))    { closeSearch();       return true; }
     if (isOpen('menu-panel'))        { closeMenu();         return true; }
