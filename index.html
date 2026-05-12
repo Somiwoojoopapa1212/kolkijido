@@ -1292,6 +1292,9 @@
   <button class="filter-btn" id="status-filter-btn" onclick="openStatusFilter()">
     콜키지: 전체 <span class="f-arrow">▾</span>
   </button>
+  <button class="filter-btn" id="alcohol-filter-btn" onclick="openAlcoholFilter()">
+    주종: 전체 <span class="f-arrow">▾</span>
+  </button>
   <button class="filter-btn" id="area-filter-btn" onclick="openAreaFilter()">
     지역: 전체 <span class="f-arrow">▾</span>
   </button>
@@ -1580,6 +1583,45 @@
   </div>
 </div>
 
+<!-- ════ 주종 필터 시트 ════ -->
+<div class="filter-backdrop" id="alcohol-backdrop" onclick="closeAlcoholFilter()"></div>
+<div class="filter-sheet" id="alcohol-sheet">
+  <div class="filter-sheet-handle"></div>
+  <div class="filter-sheet-title">주종 선택</div>
+  <div id="alcohol-option-list">
+    <div class="status-option" onclick="applyAlcoholFilter('all')">
+      <span class="s-icon"><img src="icons/custom/all.png" style="width:28px;height:28px;border-radius:7px;object-fit:cover" alt="전체"></span>
+      <span class="s-label">전체</span>
+      <span class="s-check" id="af-all">✓</span>
+    </div>
+    <div class="status-option" onclick="applyAlcoholFilter('wine')">
+      <span class="s-icon"><img src="icons/custom/wine.png" style="width:28px;height:28px;border-radius:7px;object-fit:cover" alt="와인"></span>
+      <span class="s-label">와인</span>
+      <span class="s-check hidden" id="af-wine">✓</span>
+    </div>
+    <div class="status-option" onclick="applyAlcoholFilter('whiskey')">
+      <span class="s-icon"><img src="icons/custom/whisky.png" style="width:28px;height:28px;border-radius:7px;object-fit:cover" alt="위스키"></span>
+      <span class="s-label">위스키</span>
+      <span class="s-check hidden" id="af-whiskey">✓</span>
+    </div>
+    <div class="status-option" onclick="applyAlcoholFilter('japanese')">
+      <span class="s-icon"><img src="icons/custom/sake.png" style="width:28px;height:28px;border-radius:7px;object-fit:cover" alt="일본주"></span>
+      <span class="s-label">일본주</span>
+      <span class="s-check hidden" id="af-japanese">✓</span>
+    </div>
+    <div class="status-option" onclick="applyAlcoholFilter('hanju')">
+      <span class="s-icon"><img src="icons/custom/hanju.png" style="width:28px;height:28px;border-radius:7px;object-fit:cover" alt="한주"></span>
+      <span class="s-label">한주</span>
+      <span class="s-check hidden" id="af-hanju">✓</span>
+    </div>
+    <div class="status-option" onclick="applyAlcoholFilter('baijiu')">
+      <span class="s-icon"><img src="icons/custom/baijiu.png" style="width:28px;height:28px;border-radius:7px;object-fit:cover" alt="고량주"></span>
+      <span class="s-label">고량주(백주)</span>
+      <span class="s-check hidden" id="af-baijiu">✓</span>
+    </div>
+  </div>
+</div>
+
 <!-- ════ 지역 필터 시트 ════ -->
 <div class="filter-backdrop" id="area-backdrop" onclick="closeAreaFilter()"></div>
 <div class="filter-sheet" id="area-sheet">
@@ -1769,6 +1811,7 @@ let map, markerCluster, currentUser;
 let markers = {};       // docId → Leaflet marker
 let allDocs  = [];      // 전체 문서 캐시
 let activeFilter = 'all';
+let activeAlcohol = 'all';
 let currentDocId = null; // 바텀 시트에 열린 문서
 let formMode = 'add';    // 'add' | 'edit'
 let selectedPlace = null;
@@ -1960,7 +2003,9 @@ function renderMarkers() {
   markerCluster.clearLayers();
   markers = {};
   const filtered = allDocs.filter(d =>
-    (activeFilter === 'all' || d.corkageStatus === activeFilter) && matchesArea(d)
+    (activeFilter === 'all' || d.corkageStatus === activeFilter) &&
+    matchesArea(d) &&
+    (activeAlcohol === 'all' || (d.alcoholTypes && d.alcoholTypes.includes(activeAlcohol)))
   );
   filtered.forEach(doc => {
     if (!doc.lat || !doc.lng) return;
@@ -2015,8 +2060,9 @@ function closeStatusFilter() {
     });
   }
   window.addEventListener('DOMContentLoaded', () => {
-    addSwipe('status-sheet', closeStatusFilter);
-    addSwipe('area-sheet',   closeAreaFilter);
+    addSwipe('status-sheet',  closeStatusFilter);
+    addSwipe('alcohol-sheet', closeAlcoholFilter);
+    addSwipe('area-sheet',    closeAreaFilter);
   });
 })();
 function applyStatusFilter(val) {
@@ -2227,9 +2273,13 @@ function goHome() {
   closeMenu();
   setFilter('all');
   activeArea = '전체';
+  activeAlcohol = 'all';
   const areaBtn = document.getElementById('area-filter-btn');
   if (areaBtn) areaBtn.innerHTML = `지역: 전체 <span class="f-arrow">▾</span>`;
   if (areaBtn) areaBtn.classList.remove('active');
+  const alcBtn = document.getElementById('alcohol-filter-btn');
+  if (alcBtn) alcBtn.innerHTML = `주종: 전체 <span class="f-arrow">▾</span>`;
+  if (alcBtn) alcBtn.classList.remove('active');
   renderMarkers();
   if (currentView === 'list') renderListView();
   map.flyTo([37.5665, 126.9780], 13, { duration: 0.8 });
@@ -2698,6 +2748,29 @@ function closeAreaFilter() {
   document.getElementById('area-sheet').classList.remove('open');
 }
 
+/* ════ 주종 필터 ════ */
+function openAlcoholFilter() {
+  document.getElementById('alcohol-backdrop').classList.add('open');
+  document.getElementById('alcohol-sheet').classList.add('open');
+  ['all','wine','whiskey','japanese','hanju','baijiu'].forEach(v => {
+    document.getElementById(`af-${v}`).classList.toggle('hidden', v !== activeAlcohol);
+  });
+}
+function closeAlcoholFilter() {
+  document.getElementById('alcohol-backdrop').classList.remove('open');
+  document.getElementById('alcohol-sheet').classList.remove('open');
+}
+function applyAlcoholFilter(val) {
+  closeAlcoholFilter();
+  activeAlcohol = val;
+  const labels = { all:'전체', wine:'와인', whiskey:'위스키', japanese:'일본주', hanju:'한주', baijiu:'고량주' };
+  const btn = document.getElementById('alcohol-filter-btn');
+  btn.innerHTML = `주종: ${labels[val] || '전체'} <span class="f-arrow">▾</span>`;
+  btn.classList.toggle('active', val !== 'all');
+  renderMarkers();
+  if (currentView === 'list') renderListView();
+}
+
 function selectArea(area) {
   activeArea = area;
   document.querySelectorAll('.area-chip').forEach(el =>
@@ -2780,7 +2853,9 @@ function toggleView() {
 function renderListView() {
   const container = document.getElementById('list-view');
   let filtered = allDocs.filter(d =>
-    (activeFilter === 'all' || d.corkageStatus === activeFilter) && matchesArea(d)
+    (activeFilter === 'all' || d.corkageStatus === activeFilter) &&
+    matchesArea(d) &&
+    (activeAlcohol === 'all' || (d.alcoholTypes && d.alcoholTypes.includes(activeAlcohol)))
   );
 
   // 거리순 정렬
@@ -3539,8 +3614,9 @@ function viewPhoto(url) {
     if (isOpen('login-screen'))      { document.getElementById('login-screen').style.display = 'none'; return true; }
     if (isOpen('search-overlay'))    { closeSearch();       return true; }
     if (isOpen('menu-panel'))        { closeMenu();         return true; }
-    if (isOpen('status-backdrop'))   { closeStatusFilter(); return true; }
-    if (isOpen('area-backdrop'))     { closeAreaFilter();   return true; }
+    if (isOpen('status-backdrop'))   { closeStatusFilter();  return true; }
+    if (isOpen('alcohol-backdrop'))  { closeAlcoholFilter(); return true; }
+    if (isOpen('area-backdrop'))     { closeAreaFilter();    return true; }
     if (isOpen('speed-dial'))        { closeSpeedDial();    return true; }
     if (isOpen('bottom-sheet'))      { closeSheet();        return true; }
     return false;
