@@ -2677,7 +2677,6 @@ function toggleView() {
     mapEl.style.visibility = 'hidden';
     if (sdItemAdd)    sdItemAdd.style.display    = 'none';
     if (sdItemLocate) sdItemLocate.style.display = 'none';
-    btn.textContent = '🗺️';
     if (viewLabel) viewLabel.textContent = '지도 보기';
     renderListView();
     closeSheet();
@@ -2686,7 +2685,6 @@ function toggleView() {
     mapEl.style.visibility = '';
     if (sdItemAdd && currentUser)    sdItemAdd.style.display    = '';
     if (sdItemLocate) sdItemLocate.style.display = '';
-    btn.textContent = '📋';
     if (viewLabel) viewLabel.textContent = '목록 보기';
     setTimeout(() => map && map.invalidateSize(), 100);
   }
