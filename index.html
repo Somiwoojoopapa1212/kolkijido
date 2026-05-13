@@ -1416,6 +1416,14 @@
         <div class="alcohol-tags" id="sh-alcohol"></div>
       </div>
     </div>
+    <div class="info-row" id="sh-hours-row">
+      <span class="info-label">영업시간</span>
+      <span class="info-value" id="sh-hours" style="font-size:0.85rem;color:var(--text2)">-</span>
+    </div>
+    <div class="info-row" id="sh-parking-row">
+      <span class="info-label">주차</span>
+      <span class="info-value" id="sh-parking">-</span>
+    </div>
     <div class="info-row" id="sh-memo-row">
       <span class="info-label">메모</span>
       <span class="info-value" id="sh-memo" style="font-size:0.85rem;color:var(--text2)">-</span>
@@ -1582,6 +1590,19 @@
     </div>
 
     <!-- 메모 -->
+    <div class="form-section">
+      <label class="form-label">영업시간 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
+      <input type="text" id="form-hours" class="form-input" placeholder="예: 11:00~22:00 (월요일 휴무)">
+    </div>
+    <div class="form-section">
+      <label class="form-label">주차 가능 여부</label>
+      <div class="glass-grid">
+        <div class="glass-opt" data-parking="yes"  onclick="selectParking('yes')"><span class="g-icon"><img src="icons/custom/glass-yes.png" class="form-opt-icon" alt="가능"></span>가능</div>
+        <div class="glass-opt" data-parking="paid" onclick="selectParking('paid')"><span class="g-icon">💰</span>유료</div>
+        <div class="glass-opt" data-parking="no"   onclick="selectParking('no')"><span class="g-icon"><img src="icons/custom/glass-no.png" class="form-opt-icon" alt="불가"></span>불가</div>
+        <div class="glass-opt" data-parking="null" onclick="selectParking('null')"><span class="g-icon"><img src="icons/custom/glass-unknown.png" class="form-opt-icon" alt="모름"></span>모름</div>
+      </div>
+    </div>
     <div class="form-section">
       <label class="form-label">메모 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
       <textarea id="form-memo" class="form-textarea" placeholder="예: 저녁만 가능, 1병 무료 등..."></textarea>
@@ -1915,6 +1936,7 @@ let reviewPhotos = [];
 let formStatus    = '';
 let formAlcohol   = new Set();
 let formGlass     = '';
+let formParking   = '';
 
 /* ════ 인증 ════ */
 let appInitialized = false;
@@ -2217,6 +2239,21 @@ function openSheet(docId) {
   } else { alcoholRow.classList.add('hidden'); }
 
   // 메모
+  // 영업시간
+  const hoursRow = document.getElementById('sh-hours-row');
+  if (doc.hours) {
+    document.getElementById('sh-hours').textContent = doc.hours;
+    hoursRow.classList.remove('hidden');
+  } else { hoursRow.classList.add('hidden'); }
+
+  // 주차
+  const parkingRow = document.getElementById('sh-parking-row');
+  const parkingLabels = { yes:'🅿️ 가능', paid:'🅿️ 유료', no:'주차 불가', null:'정보 없음' };
+  if (doc.parking) {
+    document.getElementById('sh-parking').textContent = parkingLabels[doc.parking] || doc.parking;
+    parkingRow.classList.remove('hidden');
+  } else { parkingRow.classList.add('hidden'); }
+
   const memoRow = document.getElementById('sh-memo-row');
   if (doc.memo) {
     document.getElementById('sh-memo').textContent = doc.memo;
@@ -2539,10 +2576,13 @@ function resetForm() {
   document.querySelectorAll('.alcohol-opt').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.glass-opt').forEach(el => el.classList.remove('active'));
   document.getElementById('form-fee').value = '';
+  document.getElementById('form-hours').value = '';
   document.getElementById('form-memo').value = '';
   document.getElementById('form-phone').value = '';
   document.getElementById('form-reservation').value = '';
   document.getElementById('fee-section').classList.add('hidden');
+  formParking = '';
+  document.querySelectorAll('[data-parking]').forEach(el => el.classList.remove('active'));
 }
 
 function openFormForAdd() {
@@ -2581,6 +2621,8 @@ async function openFormForEdit() {
   if (doc.corkageFee) document.getElementById('form-fee').value = doc.corkageFee;
   if (doc.alcoholTypes) doc.alcoholTypes.forEach(a => toggleAlcohol(a));
   if (doc.glassProvided !== undefined && doc.glassProvided !== null) selectGlass(String(doc.glassProvided));
+  if (doc.hours)          document.getElementById('form-hours').value = doc.hours;
+  if (doc.parking)        selectParking(doc.parking);
   if (doc.memo)           document.getElementById('form-memo').value = doc.memo;
   if (doc.phone)          document.getElementById('form-phone').value = doc.phone;
   if (doc.reservationUrl) document.getElementById('form-reservation').value = doc.reservationUrl;
@@ -2612,6 +2654,10 @@ function selectGlass(val) {
   formGlass = val;
   document.querySelectorAll('.glass-opt').forEach(el => el.classList.toggle('active', el.dataset.val === val));
 }
+function selectParking(val) {
+  formParking = val;
+  document.querySelectorAll('[data-parking]').forEach(el => el.classList.toggle('active', el.dataset.parking === val));
+}
 
 async function submitForm() {
   if (!formStatus) { showToast('콜키지 여부를 선택해주세요.'); return; }
@@ -2632,6 +2678,8 @@ async function submitForm() {
     corkageFee:    fee,
     alcoholTypes:  [...formAlcohol],
     glassProvided: glassVal,
+    hours:          document.getElementById('form-hours').value.trim() || null,
+    parking:        formParking || null,
     memo:           document.getElementById('form-memo').value.trim(),
     phone:          document.getElementById('form-phone').value.trim(),
     reservationUrl: document.getElementById('form-reservation').value.trim(),
