@@ -425,6 +425,22 @@
 
     /* 잔 제공 */
     .glass-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .hours-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .hours-select {
+      flex: 1; padding: 10px 8px; border: 1.5px solid #E8D5F5; border-radius: 10px;
+      font-family: 'Pretendard', sans-serif; font-size: 0.88rem;
+      background: white; color: var(--text); cursor: pointer; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 8px center;
+    }
+    .hours-sep { color: var(--text2); font-size: 0.9rem; flex-shrink: 0; }
+    .day-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .day-chip {
+      padding: 6px 12px; border: 1.5px solid #E8D5F5; border-radius: 20px;
+      font-size: 0.82rem; cursor: pointer; color: var(--text2); background: white;
+      font-family: 'Pretendard', sans-serif; transition: all 0.15s;
+    }
+    .day-chip.active { border-color: var(--purple); background: var(--purple); color: white; }
     .glass-opt {
       border: 2px solid #E8D5F5; border-radius: 12px; padding: 12px;
       text-align: center; cursor: pointer; font-size: 0.82rem; color: var(--text2);
@@ -1073,6 +1089,11 @@
       .share-option-desc { color: #A090A8 !important; }
       .share-option.emoji { background: #2A1828; }
 
+      /* 영업시간 선택기 다크모드 */
+      .hours-select { background-color: #1E1E2C !important; color: var(--text) !important; border-color: #3A2838 !important; }
+      .day-chip { background: #1E1E2C !important; border-color: #3A2838 !important; color: var(--text2) !important; }
+      .day-chip.active { background: var(--purple) !important; border-color: var(--purple) !important; color: white !important; }
+
       /* 필터 시트 다크모드 */
       .filter-sheet { background: #1E1030 !important; }
       .filter-sheet-title { color: #E8E0EE !important; }
@@ -1592,7 +1613,23 @@
     <!-- 메모 -->
     <div class="form-section">
       <label class="form-label">영업시간 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
-      <input type="text" id="form-hours" class="form-input" placeholder="예: 11:00~22:00 (월요일 휴무)">
+      <div class="hours-row">
+        <select id="form-hours-open" class="hours-select" onchange="updateHours()"></select>
+        <span class="hours-sep">~</span>
+        <select id="form-hours-close" class="hours-select" onchange="updateHours()"></select>
+      </div>
+      <div class="day-chips" id="form-day-chips">
+        <span style="font-size:0.78rem;color:var(--text2);align-self:center;margin-right:4px">휴무</span>
+        <div class="day-chip" data-day="월" onclick="toggleDay(this)">월</div>
+        <div class="day-chip" data-day="화" onclick="toggleDay(this)">화</div>
+        <div class="day-chip" data-day="수" onclick="toggleDay(this)">수</div>
+        <div class="day-chip" data-day="목" onclick="toggleDay(this)">목</div>
+        <div class="day-chip" data-day="금" onclick="toggleDay(this)">금</div>
+        <div class="day-chip" data-day="토" onclick="toggleDay(this)">토</div>
+        <div class="day-chip" data-day="일" onclick="toggleDay(this)">일</div>
+        <div class="day-chip" data-day="없음" onclick="toggleDay(this)">없음</div>
+      </div>
+      <input type="hidden" id="form-hours">
     </div>
     <div class="form-section">
       <label class="form-label">주차 가능 여부 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
@@ -2582,7 +2619,7 @@ function resetForm() {
   document.querySelectorAll('.alcohol-opt').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.glass-opt').forEach(el => el.classList.remove('active'));
   document.getElementById('form-fee').value = '';
-  document.getElementById('form-hours').value = '';
+  resetHours();
   document.getElementById('form-memo').value = '';
   document.getElementById('form-phone').value = '';
   document.getElementById('form-reservation').value = '';
@@ -2627,7 +2664,7 @@ async function openFormForEdit() {
   if (doc.corkageFee) document.getElementById('form-fee').value = doc.corkageFee;
   if (doc.alcoholTypes) doc.alcoholTypes.forEach(a => toggleAlcohol(a));
   if (doc.glassProvided !== undefined && doc.glassProvided !== null) selectGlass(String(doc.glassProvided));
-  if (doc.hours)          document.getElementById('form-hours').value = doc.hours;
+  if (doc.hours)          setHoursFromText(doc.hours);
   if (doc.parking)        selectParking(doc.parking);
   if (doc.memo)           document.getElementById('form-memo').value = doc.memo;
   if (doc.phone)          document.getElementById('form-phone').value = doc.phone;
@@ -2663,6 +2700,80 @@ function selectGlass(val) {
 function selectParking(val) {
   formParking = val;
   document.querySelectorAll('[data-parking]').forEach(el => el.classList.toggle('active', el.dataset.parking === val));
+}
+
+/* ════ 영업시간 선택기 ════ */
+(function initHourSelects() {
+  const times = [];
+  for (let h = 6; h <= 24; h++) {
+    ['00','30'].forEach(m => {
+      if (h === 24 && m === '30') return;
+      times.push(`${String(h).padStart(2,'0')}:${m}`);
+    });
+  }
+  times.push('다음날 01:00', '다음날 02:00');
+
+  ['form-hours-open','form-hours-close'].forEach((id, idx) => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const placeholder = document.createElement('option');
+    placeholder.value = ''; placeholder.textContent = idx === 0 ? '오픈' : '마감';
+    sel.appendChild(placeholder);
+    times.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      sel.appendChild(opt);
+    });
+  });
+  const closeEl = document.getElementById('form-hours-close');
+  if (closeEl) {
+    const def = closeEl.querySelector('option[value="22:00"]');
+    if (def) def.selected = true;
+  }
+})();
+
+function toggleDay(el) {
+  const day = el.dataset.day;
+  if (day === '없음') {
+    document.querySelectorAll('.day-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+  } else {
+    document.querySelector('.day-chip[data-day="없음"]')?.classList.remove('active');
+    el.classList.toggle('active');
+  }
+  updateHours();
+}
+
+function updateHours() {
+  const open  = document.getElementById('form-hours-open')?.value;
+  const close = document.getElementById('form-hours-close')?.value;
+  if (!open || !close) { document.getElementById('form-hours').value = ''; return; }
+  const activeDays = [...document.querySelectorAll('.day-chip.active')].map(c => c.dataset.day).filter(d => d !== '없음');
+  const dayStr = activeDays.length ? ` (${activeDays.join('·')} 휴무)` : '';
+  document.getElementById('form-hours').value = `${open}~${close}${dayStr}`;
+}
+
+function resetHours() {
+  document.getElementById('form-hours-open').value  = '';
+  document.getElementById('form-hours-close').value = '';
+  document.querySelectorAll('.day-chip').forEach(c => c.classList.remove('active'));
+  document.getElementById('form-hours').value = '';
+}
+
+function setHoursFromText(text) {
+  if (!text) return;
+  const match = text.match(/(\d{2}:\d{2})~(\d{2}:\d{2})/);
+  if (match) {
+    document.getElementById('form-hours-open').value  = match[1];
+    document.getElementById('form-hours-close').value = match[2];
+  }
+  const dayMatch = text.match(/\((.+?) 휴무\)/);
+  if (dayMatch) {
+    dayMatch[1].split('·').forEach(d => {
+      document.querySelector(`.day-chip[data-day="${d}"]`)?.classList.add('active');
+    });
+  }
+  updateHours();
 }
 
 async function submitForm() {
