@@ -1595,12 +1595,12 @@
       <input type="text" id="form-hours" class="form-input" placeholder="예: 11:00~22:00 (월요일 휴무)">
     </div>
     <div class="form-section">
-      <label class="form-label">주차 가능 여부</label>
+      <label class="form-label">주차 가능 여부 <span style="font-size:0.75rem;opacity:0.7">(선택사항)</span></label>
       <div class="status-grid">
-        <div class="glass-opt" data-parking="yes"  onclick="selectParking('yes')"><span class="g-icon">🅿️</span>가능</div>
-        <div class="glass-opt" data-parking="paid" onclick="selectParking('paid')"><span class="g-icon">💰</span>유료</div>
-        <div class="glass-opt" data-parking="no"   onclick="selectParking('no')"><span class="g-icon">🚫</span>불가</div>
-        <div class="glass-opt" data-parking="null" onclick="selectParking('null')"><span class="g-icon">❓</span>모름</div>
+        <div class="glass-opt" data-parking="yes"  onclick="selectParking('yes')"><span class="g-icon"><img src="icons/custom/parking-yes.png" class="form-opt-icon" alt="가능"></span>가능</div>
+        <div class="glass-opt" data-parking="paid" onclick="selectParking('paid')"><span class="g-icon"><img src="icons/custom/parking-paid.png" class="form-opt-icon" alt="유료"></span>유료</div>
+        <div class="glass-opt" data-parking="no"   onclick="selectParking('no')"><span class="g-icon"><img src="icons/custom/parking-no.png" class="form-opt-icon" alt="불가"></span>불가</div>
+        <div class="glass-opt" data-parking="null" onclick="selectParking('null')"><span class="g-icon"><img src="icons/custom/parking-unknown.png" class="form-opt-icon" alt="모름"></span>모름</div>
       </div>
     </div>
     <div class="form-section">
@@ -2248,9 +2248,15 @@ function openSheet(docId) {
 
   // 주차
   const parkingRow = document.getElementById('sh-parking-row');
-  const parkingLabels = { yes:'🅿️ 가능', paid:'🅿️ 유료', no:'주차 불가', null:'정보 없음' };
+  const parkingIcon = (key) => `<img src="icons/custom/parking-${key === 'null' ? 'unknown' : key}.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px">`;
+  const parkingLabels = {
+    yes:  parkingIcon('yes')  + '가능',
+    paid: parkingIcon('paid') + '유료',
+    no:   parkingIcon('no')   + '불가',
+    null: parkingIcon('null') + '정보 없음'
+  };
   if (doc.parking) {
-    document.getElementById('sh-parking').textContent = parkingLabels[doc.parking] || doc.parking;
+    document.getElementById('sh-parking').innerHTML = parkingLabels[doc.parking] || doc.parking;
     parkingRow.classList.remove('hidden');
   } else { parkingRow.classList.add('hidden'); }
 
