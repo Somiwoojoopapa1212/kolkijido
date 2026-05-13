@@ -263,8 +263,8 @@
     .status-badge.no      { background: #FDEDEC; color: var(--no); }
     .status-badge.unknown { background: #F2F3F4; color: var(--unknown); }
 
-    .alcohol-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-    .alcohol-tag { background: #F0E8FF; color: var(--purple); border-radius: 12px; padding: 3px 10px; font-size: 0.78rem; }
+    .alcohol-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+    .alcohol-tag { color: var(--text); font-size: 0.85rem; display: inline-flex; align-items: center; }
 
     .sheet-meta { font-size: 0.75rem; color: var(--text2); margin-top: 12px; }
 
@@ -1915,7 +1915,7 @@ function statusHtml(status) {
   return `<img src="${icon}" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;object-fit:contain">${STATUS_LABELS[status]||'정보 없음'}`;
 }
 function alcoholTagHtml(a) {
-  const icon = ALCOHOL_ICONS[a] ? `<img src="${ALCOHOL_ICONS[a]}" style="width:14px;height:14px;vertical-align:middle;margin-right:3px;object-fit:contain">` : '';
+  const icon = ALCOHOL_ICONS[a] ? `<img src="${ALCOHOL_ICONS[a]}" style="width:16px;height:16px;border-radius:4px;object-fit:cover;margin-right:4px">` : '';
   return `<span class="alcohol-tag">${icon}${ALCOHOL_LABELS[a]||a}</span>`;
 }
 const AREA_NICKNAMES = {
@@ -2261,9 +2261,9 @@ function openSheet(docId) {
 
   // 잔 제공
   const glassMap = {
-    'true':  '<img src="icons/custom/glass-yes.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px"> 있음',
-    'false': '<img src="icons/custom/glass-no.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px"> 없음',
-    'null':  '<img src="icons/custom/glass-unknown.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px"> 모름'
+    'true':  '<img src="icons/custom/glass-yes.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px">있음',
+    'false': '<img src="icons/custom/glass-no.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px">없음',
+    'null':  '<img src="icons/custom/glass-unknown.png" style="width:16px;height:16px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:4px">모름'
   };
   document.getElementById('sh-glass').innerHTML = glassMap[String(doc.glassProvided)] || glassMap['null'];
 
