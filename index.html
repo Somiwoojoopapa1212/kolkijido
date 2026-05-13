@@ -472,16 +472,16 @@
       display: flex; flex-direction: column; align-items: center; cursor: pointer;
     }
     .map-marker-icon {
-      width: 42px; height: 42px; border-radius: 12px;
-      border: 2.5px solid white;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+      width: 32px; height: 32px; border-radius: 9px;
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
       display: block; object-fit: cover;
     }
     .map-marker-ptr {
       width: 0; height: 0;
-      border-left: 7px solid transparent;
-      border-right: 7px solid transparent;
-      border-top: 9px solid white;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid white;
       margin-top: -1px;
       filter: drop-shadow(0 2px 2px rgba(0,0,0,0.25));
     }
@@ -2099,6 +2099,24 @@ function initMap() {
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true,
+    iconCreateFunction: function(cluster) {
+      const count = cluster.getChildCount();
+      const size = count < 10 ? 36 : count < 50 ? 42 : 50;
+      return L.divIcon({
+        html: `<div style="
+          width:${size}px;height:${size}px;border-radius:50%;
+          background:linear-gradient(135deg,#4D204D,#7B3A7B);
+          border:2.5px solid white;
+          box-shadow:0 3px 12px rgba(77,32,77,0.5);
+          display:flex;align-items:center;justify-content:center;
+          font-family:'Pretendard',sans-serif;font-size:${count<10?'13':'12'}px;
+          font-weight:700;color:white;
+        ">${count}</div>`,
+        className: '',
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
+      });
+    },
   });
   map.addLayer(markerCluster);
   map.on('click', () => { closeSheet(); });
@@ -2111,12 +2129,12 @@ function createMarkerIcon(status, name) {
   const nameLabel = shortName
     ? `<div style="background:rgba(30,20,40,0.82);backdrop-filter:blur(3px);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:white;white-space:nowrap;box-shadow:0 1px 6px rgba(0,0,0,0.3);margin-bottom:3px;font-family:'Pretendard',sans-serif">${shortName}</div>`
     : '';
-  const totalH = 42 + 9 + (shortName ? 22 : 0);
+  const totalH = 32 + 7 + (shortName ? 20 : 0);
   return L.divIcon({
     html: `<div class="map-marker-wrap">${nameLabel}<img src="${src}" class="map-marker-icon"><div class="map-marker-ptr"></div></div>`,
     className: '',
-    iconSize: [42, totalH],
-    iconAnchor: [21, totalH],
+    iconSize: [32, totalH],
+    iconAnchor: [16, totalH],
     popupAnchor: [0, -(totalH + 4)],
   });
 }
