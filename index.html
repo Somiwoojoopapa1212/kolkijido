@@ -931,6 +931,30 @@
     }
 
     /* ══ 시음 앱 기록 버튼 ══ */
+    /* ══ 공유 옵션 시트 ══ */
+    #share-backdrop { display:none; position:fixed; inset:0; z-index:3000; background:rgba(0,0,0,0.45); }
+    #share-backdrop.open { display:block; }
+    #share-sheet {
+      position:fixed; left:0; right:0; bottom:0; z-index:3001;
+      background:white; border-radius:22px 22px 0 0; padding:16px 20px 40px;
+      transform:translateY(100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
+    }
+    #share-sheet.open { transform:translateY(0); }
+    .share-sheet-handle { width:36px; height:4px; background:#E0D0F0; border-radius:2px; margin:0 auto 16px; }
+    .share-sheet-title { font-size:0.82rem; font-weight:700; color:var(--text2); margin-bottom:14px; }
+    .share-option {
+      display:flex; align-items:center; gap:14px; padding:14px 4px;
+      border-bottom:1px solid #F5EEFF; cursor:pointer; border-radius:8px;
+      transition:background 0.12s;
+    }
+    .share-option:last-child { border-bottom:none; }
+    .share-option:active { background:#F5EEFF; }
+    .share-option-icon { width:42px; height:42px; border-radius:12px; object-fit:cover; flex-shrink:0; }
+    .share-option-icon.emoji { display:flex; align-items:center; justify-content:center; font-size:1.4rem; background:#F0E8FF; }
+    .share-option-info { flex:1; }
+    .share-option-name { font-size:0.95rem; font-weight:600; color:var(--text); }
+    .share-option-desc { font-size:0.78rem; color:var(--text2); margin-top:2px; }
+
     /* ══ 비로그인 오버레이 ══ */
     .sh-login-prompt {
       position: absolute;
@@ -1041,6 +1065,14 @@
       /* 전화/예약 */
       .btn-call    { background: #1A3020; color: #52D98A; border-color: #2A5038; }
       .btn-reserve { background: #1A2035; color: #7AB8E8; border-color: #2A3858; }
+      /* 공유 시트 다크모드 */
+      #share-sheet { background: #1E1030 !important; }
+      .share-sheet-title { color: #A090A8 !important; }
+      .share-option { border-bottom-color: #2A1828 !important; }
+      .share-option-name { color: #E8E0EE !important; }
+      .share-option-desc { color: #A090A8 !important; }
+      .share-option.emoji { background: #2A1828; }
+
       /* 필터 시트 다크모드 */
       .filter-sheet { background: #1E1030 !important; }
       .filter-sheet-title { color: #E8E0EE !important; }
@@ -1440,6 +1472,34 @@
     </div><!-- /#sh-detail-area -->
   </div>
   </div><!-- /#bottom-sheet-body -->
+</div>
+
+<!-- ════ 공유 옵션 시트 ════ -->
+<div id="share-backdrop" onclick="closeShareSheet()"></div>
+<div id="share-sheet">
+  <div class="share-sheet-handle"></div>
+  <div class="share-sheet-title" id="share-sheet-title">공유하기</div>
+  <div class="share-option" onclick="doKakaoShare()">
+    <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" class="share-option-icon" alt="카카오톡">
+    <div class="share-option-info">
+      <div class="share-option-name">카카오톡으로 공유</div>
+      <div class="share-option-desc">식당 정보를 카카오톡으로 전송</div>
+    </div>
+  </div>
+  <div class="share-option" onclick="doCopyLink()">
+    <div class="share-option-icon emoji">🔗</div>
+    <div class="share-option-info">
+      <div class="share-option-name">링크 복사</div>
+      <div class="share-option-desc">클립보드에 주소 복사</div>
+    </div>
+  </div>
+  <div class="share-option" id="share-native-option" onclick="doNativeShare()">
+    <div class="share-option-icon emoji">📤</div>
+    <div class="share-option-info">
+      <div class="share-option-name">다른 앱으로 공유</div>
+      <div class="share-option-desc">문자·메일·SNS 등</div>
+    </div>
+  </div>
 </div>
 
 <!-- ════ 검색 오버레이 ════ -->
@@ -3051,46 +3111,65 @@ function openNaverMap() {
 }
 
 /* ════ 공유 ════ */
-async function sharePlace() {
+let _shareDoc = null;
+let _shareUrl  = '';
+
+function sharePlace() {
   if (!currentDocId) return;
   const doc = allDocs.find(d => d.id === currentDocId);
   if (!doc) return;
+  _shareDoc = doc;
+  _shareUrl = `${location.origin}${location.pathname}#${currentDocId}`;
 
-  const statusLabel = { free: '무료 콜키지', paid: '유료 콜키지', no: '콜키지 불가', unknown: '정보 없음' };
-  const fee = doc.corkageStatus === 'paid' && doc.corkageFee ? ` (${doc.corkageFee.toLocaleString()}원)` : '';
-  const url  = `${location.origin}${location.pathname}#${currentDocId}`;
-  const desc = `${statusLabel[doc.corkageStatus] || ''}${fee}\n📍 ${doc.address || ''}`;
+  // 타이틀에 식당명 표시
+  document.getElementById('share-sheet-title').textContent = doc.name;
+  // navigator.share 미지원 기기는 "다른 앱으로 공유" 숨김
+  document.getElementById('share-native-option').style.display = navigator.share ? '' : 'none';
 
-  // 카카오 공유 (SDK 로드된 경우 우선 사용)
-  if (window.Kakao?.isInitialized?.()) {
-    try {
-      Kakao.Share.sendDefault({
-        objectType: 'feed',
-        content: {
-          title: `🍷 ${doc.name}`,
-          description: desc,
-          imageUrl: 'https://somiwoojoopapa1212.github.io/kolkijido/icons/icon-512.png',
-          link: { mobileWebUrl: url, webUrl: url },
-        },
-        buttons: [{
-          title: '콜키지도에서 보기',
-          link: { mobileWebUrl: url, webUrl: url },
-        }],
-      });
-      return;
-    } catch(e) { /* 실패 시 아래 fallback */ }
-  }
+  document.getElementById('share-backdrop').classList.add('open');
+  document.getElementById('share-sheet').classList.add('open');
+}
 
-  // fallback: 기기 공유 시트 or 클립보드
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: `🍷 ${doc.name}`, text: desc, url });
-    } catch(e) {
-      if (e.name !== 'AbortError') copyToClipboard(url);
-    }
-  } else {
-    copyToClipboard(url);
-  }
+function closeShareSheet() {
+  document.getElementById('share-backdrop').classList.remove('open');
+  document.getElementById('share-sheet').classList.remove('open');
+}
+
+function doKakaoShare() {
+  closeShareSheet();
+  if (!_shareDoc || !window.Kakao?.isInitialized?.()) return;
+  const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보 없음' };
+  const fee = _shareDoc.corkageStatus === 'paid' && _shareDoc.corkageFee ? ` (${_shareDoc.corkageFee.toLocaleString()}원)` : '';
+  const desc = `${statusLabel[_shareDoc.corkageStatus] || ''}${fee}\n📍 ${_shareDoc.address || ''}`;
+  Kakao.Share.sendDefault({
+    objectType: 'feed',
+    content: {
+      title: `🍷 ${_shareDoc.name}`,
+      description: desc,
+      imageUrl: 'https://somiwoojoopapa1212.github.io/kolkijido/icons/icon-512.png',
+      link: { mobileWebUrl: _shareUrl, webUrl: _shareUrl },
+    },
+    buttons: [{ title: '콜키지도에서 보기', link: { mobileWebUrl: _shareUrl, webUrl: _shareUrl } }],
+  });
+}
+
+function doCopyLink() {
+  closeShareSheet();
+  copyToClipboard(_shareUrl);
+}
+
+async function doNativeShare() {
+  closeShareSheet();
+  if (!_shareDoc || !navigator.share) return;
+  const statusLabel = { free:'무료 콜키지', paid:'유료 콜키지', no:'콜키지 불가', unknown:'정보 없음' };
+  const fee = _shareDoc.corkageStatus === 'paid' && _shareDoc.corkageFee ? ` (${_shareDoc.corkageFee.toLocaleString()}원)` : '';
+  try {
+    await navigator.share({
+      title: `🍷 ${_shareDoc.name}`,
+      text: `${statusLabel[_shareDoc.corkageStatus] || ''}${fee}\n📍 ${_shareDoc.address || ''}`,
+      url: _shareUrl,
+    });
+  } catch(e) { if (e.name !== 'AbortError') copyToClipboard(_shareUrl); }
 }
 
 function copyToClipboard(text) {
