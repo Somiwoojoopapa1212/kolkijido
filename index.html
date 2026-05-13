@@ -33,6 +33,7 @@
   <meta name="google-site-verification" content="Q_twG8HByEOeuDrcTWSuUyuWCIUf1pS9KaL7wweJndY" />
 
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" crossorigin="anonymous"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css">
@@ -2254,6 +2255,7 @@ function closeSpeedDial() {
 })();
 
 const KAKAO_REST_KEY = '993c5a992861be3eea43cb5ee7f68376';
+if (window.Kakao && !Kakao.isInitialized()) Kakao.init('e5ed844650432c56d73361aec1d06927');
 const ADMIN_EMAIL    = 'shuttle1207@gmail.com';
 
 /* ════ 검색 ════ */
@@ -3057,11 +3059,32 @@ async function sharePlace() {
   const statusLabel = { free: '무료 콜키지', paid: '유료 콜키지', no: '콜키지 불가', unknown: '정보 없음' };
   const fee = doc.corkageStatus === 'paid' && doc.corkageFee ? ` (${doc.corkageFee.toLocaleString()}원)` : '';
   const url  = `${location.origin}${location.pathname}#${currentDocId}`;
-  const text = `🍷 ${doc.name}\n📍 ${doc.address || ''}\n${statusLabel[doc.corkageStatus] || ''}${fee}`;
+  const desc = `${statusLabel[doc.corkageStatus] || ''}${fee}\n📍 ${doc.address || ''}`;
 
+  // 카카오 공유 (SDK 로드된 경우 우선 사용)
+  if (window.Kakao?.isInitialized?.()) {
+    try {
+      Kakao.Share.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: `🍷 ${doc.name}`,
+          description: desc,
+          imageUrl: 'https://somiwoojoopapa1212.github.io/kolkijido/icons/icon-512.png',
+          link: { mobileWebUrl: url, webUrl: url },
+        },
+        buttons: [{
+          title: '콜키지도에서 보기',
+          link: { mobileWebUrl: url, webUrl: url },
+        }],
+      });
+      return;
+    } catch(e) { /* 실패 시 아래 fallback */ }
+  }
+
+  // fallback: 기기 공유 시트 or 클립보드
   if (navigator.share) {
     try {
-      await navigator.share({ title: `🍷 ${doc.name}`, text, url });
+      await navigator.share({ title: `🍷 ${doc.name}`, text: desc, url });
     } catch(e) {
       if (e.name !== 'AbortError') copyToClipboard(url);
     }
